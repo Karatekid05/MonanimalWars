@@ -176,19 +176,19 @@ yarn deploy --network <network-name> --file <file-name>
 For Monad Devnet, you can use:
 
 ```
-yarn deploy --network monad-devnet
+yarn deploy --network monadDevnet
 ```
 
 To verify the contract, you can use:
 
 ```
-yarn verify --network monad-devnet
+yarn verify --network monadDevnet
 ```
 
 To do both right after one another, you can use:
 
 ```
-yarn deploy --network monad-devnet && yarn verify --network monad-devnet
+yarn deploy --network monadDevnet && yarn verify --network monadDevnet
 ```
 
 If you don't provide a file name, it will default to `Deploy.s.sol`.
