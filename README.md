@@ -1,4 +1,4 @@
-# 🏗 Scaffold-ETH 2
+🏗 Scaffold-ETH 2 - Foundry Edition (Monad Devnet Ready)
 
 <h4 align="center">
   <a href="https://docs.scaffoldeth.io">Documentation</a> |
@@ -24,43 +24,62 @@ Before you begin, you need to install the following tools:
 - [Node (>= v18.17)](https://nodejs.org/en/download/)
 - Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
 - [Git](https://git-scm.com/downloads)
-- [Foundryup](https://book.getfoundry.sh/getting-started/installation)
+- [Foundry](https://book.getfoundry.sh/getting-started/installation)
 
 > **Note for Windows users**. Foundryup is not currently supported by Powershell or Cmd, and has issues with Git Bash. You will need to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) as your terminal.
 
 ## Quickstart
 
-To get started with Scaffold-ETH 2, follow the steps below:
+To get started with Scaffold-ETH 2 Foundry Edition, follow the steps below:
 
 1. Clone this repo & install dependencies
 
-```
-git clone -b foundry https://github.com/scaffold-eth/scaffold-eth-2.git
-cd scaffold-eth-2
-yarn install && forge install --root packages/foundry
+```bash
+git clone https://github.com/scaffold-eth/se-2-foundry-monad.git
+cd se-2-foundry-monad
+yarn install
 ```
 
 2. Run a local network in the first terminal:
 
-```
+```bash
 yarn chain
 ```
 
 3. On a second terminal, deploy the test contract:
 
-```
+```bash
 yarn deploy
 ```
 
 4. On a third terminal, start your NextJS app:
 
-```
+```bash
 yarn start
 ```
 
 Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
 
 ## Deploying to Live Networks
+
+### Deploying your Frontend
+
+To deploy your frontend, you need to set the following environment variables in `packages/nextjs/.env.local`:
+
+```
+NEXT_PUBLIC_MONAD_RPC_URL=
+NEXT_PUBLIC_MONAD_BLOCKSCOUT_URL=
+```
+
+You can also copy the .env.example file and rename it to .env.local.
+
+Before deploying, do not forget to change the target network in `packages/nextjs/scaffold.config.ts` to `monadDevnet`.
+
+```typescript
+  targetNetworks: [monadDevnet],
+```
+
+Then run `yarn vercel` to deploy your frontend to vercel. You need to have a vercel account.
 
 ### Setting Up Your Deployer Account
 
@@ -108,6 +127,16 @@ This will ask for your [keystore](https://book.getfoundry.sh/reference/cli/cast/
 
 ### Deployment Commands
 
+Before deploying, you need to create an .env file under `packages/foundry` and set the following variables:
+
+```
+MONAD_DEVNET_RPC_KEY=
+MONAD_DEVNET_RPC_URL=
+MONAD_DEVNET_VERIFIER_URL=
+```
+
+You may also copy the .env.example file and rename it to .env.
+
 <details>
 <summary>Understanding deployment scripts structure</summary>
 
@@ -142,6 +171,24 @@ yarn deploy --file DeployYourContract.s.sol
 
 ```
 yarn deploy --network <network-name> --file <file-name>
+```
+
+For Monad Devnet, you can use:
+
+```
+yarn deploy --network monad-devnet
+```
+
+To verify the contract, you can use:
+
+```
+yarn verify --network monad-devnet
+```
+
+To do both right after one another, you can use:
+
+```
+yarn deploy --network monad-devnet && yarn verify --network monad-devnet
 ```
 
 If you don't provide a file name, it will default to `Deploy.s.sol`.
@@ -182,3 +229,12 @@ To know more about its features, check out our [website](https://scaffoldeth.io)
 We welcome contributions to Scaffold-ETH 2!
 
 Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+
+## Thanks to the Scaffold-ETH 2 Team
+
+Thanks to the Scaffold-ETH 2 Team for the amazing project and the great documentation.
+<3
+
+## Support
+
+If you have any questions or need help, please dm me on tg, my handle is: `portdev`
