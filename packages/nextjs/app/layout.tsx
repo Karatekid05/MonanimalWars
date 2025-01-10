@@ -9,16 +9,15 @@ export const metadata = getMetadata({
   description: "Built with 🏗 Scaffold-ETH 2",
 });
 
-const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
+// @ts-ignore
+export default function RootLayout({ children }) {
   return (
-    <html suppressHydrationWarning>
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <ThemeProvider enableSystem>
           <ScaffoldEthAppWithProviders>{children}</ScaffoldEthAppWithProviders>
         </ThemeProvider>
       </body>
     </html>
   );
-};
-
-export default ScaffoldEthApp;
+}

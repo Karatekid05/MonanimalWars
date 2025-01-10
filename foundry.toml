@@ -1,0 +1,13 @@
+[profile.default]
+src = 'packages/foundry/contracts'
+out = 'packages/foundry/out'
+libs = ['packages/foundry/lib']
+cache_path = 'packages/foundry/cache'
+broadcast = 'packages/foundry/broadcast'
+script = 'packages/foundry/script'
+test = 'packages/foundry/test'
+
+fs_permissions = [{ access = "read-write", path = "./"}]
+
+[rpc_endpoints]
+localhost = "http://127.0.0.1:8545"

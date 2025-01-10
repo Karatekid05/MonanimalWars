@@ -9,6 +9,7 @@
     ]
   },
   "scripts": {
+    "vercel-build": "next build",
     "account": "yarn workspace @se-2/foundry account",
     "chain": "yarn workspace @se-2/foundry chain",
     "fork": "yarn workspace @se-2/foundry fork",
