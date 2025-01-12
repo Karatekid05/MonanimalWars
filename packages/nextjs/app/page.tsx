@@ -51,7 +51,7 @@ const Home = () => {
         <div className="grid grid-cols-5 gap-8 justify-center p-8">
           {[
             { name: "Moyaki", image: "/images/Moyaki.png" },
-            { name: "Molandak", image: "/images/Molandak1.png" },
+            { name: "Mopo", image: "/images/mopo.png" },
             { name: "Chog", image: "/images/Chog1.png" },
             { name: "Salmonad", image: "/images/Salmonad1.png" },
             { name: "Mouch", image: "/images/mosca.png" },
