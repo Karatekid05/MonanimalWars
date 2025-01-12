@@ -1,26 +1,14 @@
-//SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+//SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
 
-import "./DeployHelpers.s.sol";
-import { DeployYourContract } from "./DeployYourContract.s.sol";
+import {Script} from "forge-std/Script.sol";
+import {MonanimalWars} from "../contracts/MonanimalWars.sol";
 
-/**
- * @notice Main deployment script for all contracts
- * @dev Run this when you want to deploy multiple contracts at once
- *
- * Example: yarn deploy # runs this script(without`--file` flag)
- */
-contract DeployScript is ScaffoldETHDeploy {
-    function run() external {
-        // Deploys all your contracts sequentially
-        // Add new deployments here when needed
-
-        // Deploy YourContract
-        DeployYourContract yourContract = new DeployYourContract();
-        yourContract.run();
-
-        // Deploy another contract
-        // DeployMyContract myContract = new DeployMyContract();
-        // myContract.run();
+contract DeployScript is Script {
+    function run() external returns (MonanimalWars) {
+        vm.startBroadcast();
+        MonanimalWars monanimalWars = new MonanimalWars();
+        vm.stopBroadcast();
+        return monanimalWars;
     }
 }
