@@ -10,18 +10,21 @@ export type ScaffoldConfig = {
 };
 
 export const monadDevnet = defineChain({
-  id: 41454,
+  id: 20143,
   name: "Monad Devnet",
-  nativeCurrency: { name: "Monad", symbol: "MON", decimals: 18 },
+  nativeCurrency: { name: "Monad", symbol: "DMON", decimals: 18 },
   rpcUrls: {
     default: {
-      http: [process.env.NEXT_PUBLIC_MONAD_RPC_URL || ""],
+      http: ["https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a"],
+    },
+    public: {
+      http: ["https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a"],
     },
   },
   blockExplorers: {
     default: {
       name: "Monad Devnet Blockscout",
-      url: process.env.NEXT_PUBLIC_MONAD_BLOCKSCOUT_URL || "",
+      url: "https://explorer.monad-devnet.devnet101.com",
     },
   },
 });
@@ -44,10 +47,10 @@ const scaffoldConfig = {
   // You can get your own at https://cloud.walletconnect.com
   // It's recommended to store it in an env variable:
   // .env.local for local testing, and in the Vercel/system env config for live apps.
-  walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "3a8170812b534d0ff9d794f19a901d64",
+  walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "62afc991519fa07f009e934262bd06d4",
 
   // Only show the Burner Wallet when running on hardhat network
-  onlyLocalBurnerWallet: true,
+  onlyLocalBurnerWallet: false,
 } as const satisfies ScaffoldConfig;
 
 export default scaffoldConfig;
