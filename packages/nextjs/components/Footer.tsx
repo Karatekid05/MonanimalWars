@@ -56,7 +56,7 @@ export const Footer = () => {
           </a>
         </p>
         <div className="mt-4">
-          <Image src="/images/MonadLogo.png" alt="Monad Logo" width={48} height={48} className="w-12 h-12" />
+          <Image src="/images/Escudo1.png" alt="Monad Logo" width={100} height={100} className="w-24 h-24" />
         </div>
       </div>
     </div>
