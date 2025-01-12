@@ -46,7 +46,7 @@ contract MonanimalWars {
         _createTeam("Chog");
         _createTeam("Salmonad");
         _createTeam("Mouch");
-        _createTeam("Mouch");
+        _createTeam("Mopo");
     }
 
     function _createTeam(string memory name) private {
@@ -63,6 +63,8 @@ contract MonanimalWars {
 
     function registerPlayer(string memory username) external {
         require(bytes(players[msg.sender].username).length == 0, "Player already registered");
+        require(bytes(username).length > 0, "Username cannot be empty");
+        require(bytes(username).length <= 32, "Username too long");
         players[msg.sender].username = username;
         emit PlayerRegistered(msg.sender, username);
     }
