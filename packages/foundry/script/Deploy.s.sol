@@ -14,7 +14,9 @@ contract Deploy is Script {
         MonanimalWars monWars = new MonanimalWars();
 
         // Then deploy MonavaraNFT with baseURI
-        MonavaraNFT nft = new MonavaraNFT("/nft-metadata/");
+        MonavaraNFT nft = new MonavaraNFT(
+            "https://raw.githubusercontent.com/Karatekid05/MonanimalWars/main/packages/nextjs/public/nft-metadata/"
+        );
 
         // Set up contract connections
         nft.setMonWarsContract(address(monWars));
