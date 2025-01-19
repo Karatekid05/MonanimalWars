@@ -1,0 +1,15 @@
+{
+    "name": "Legendary Monavara #1",
+    "description": "A legendary Monavara NFT awarded to brave warriors in the Monanimal Wars",
+    "image": "/images/Monavara-scooter.png",
+    "attributes": [
+        {
+            "trait_type": "Type",
+            "value": "Legendary"
+        },
+        {
+            "trait_type": "Title",
+            "value": "Brave Warrior"
+        }
+    ]
+}

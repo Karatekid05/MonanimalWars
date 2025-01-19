@@ -17,13 +17,13 @@ const Team = () => {
       name: "Karatekid⨀5",
       role: "Developer",
       image: "/images/kid.jpg",
-      description: "Karatekid⨀5 is a frontend wizard with a passion for creating immersive user experiences.",
+      description: "Karatekid⨀5 is a blockchain genius who ensures secure and seamless smart contract interactions.",
     },
     {
       name: "Ravel",
       role: "Developer",
       image: "/images/ravel.jpg",
-      description: "Ravel is a blockchain genius who ensures secure and seamless smart contract interactions.",
+      description: "Ravel is a frontend wizard with a passion for creating immersive user experiences.",
     },
     {
       name: "MarKrypto",
@@ -48,7 +48,7 @@ const Team = () => {
     <div
       className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center flex-col"
       style={{
-        backgroundImage: `url('/images/BG_team.png')`,
+        backgroundImage: `url('/images/BG_site.png')`,
       }}
     >
       <h2 className="text-center text-3xl font-bold mb-8 text-white">

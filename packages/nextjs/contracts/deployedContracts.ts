@@ -152,7 +152,7 @@ const deployedContracts = {
       deploymentScript: "Deploy.s.sol",
     },
     MonanimalWars: {
-      address: "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+      address: "0x1f10f3ba7acb61b2f50b9d6ddcf91a6f787c0e82",
       abi: [
         {
           type: "constructor",
@@ -161,38 +161,77 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "DAMAGE_PER_ATTACK",
+          name: "MAX_ATTACK",
           inputs: [],
           outputs: [
             {
               name: "",
-              type: "uint256",
-              internalType: "uint256",
+              type: "uint16",
+              internalType: "uint16",
             },
           ],
           stateMutability: "view",
         },
         {
           type: "function",
-          name: "INITIAL_TEAM_HP",
+          name: "MAX_HEAL",
           inputs: [],
           outputs: [
             {
               name: "",
-              type: "uint256",
-              internalType: "uint256",
+              type: "uint16",
+              internalType: "uint16",
             },
           ],
           stateMutability: "view",
         },
         {
           type: "function",
-          name: "attack",
+          name: "MAX_HP",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint16",
+              internalType: "uint16",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "MIN_ATTACK",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint16",
+              internalType: "uint16",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "MIN_HEAL",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint16",
+              internalType: "uint16",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "assignTeam",
           inputs: [
             {
-              name: "targetTeamId",
-              type: "uint256",
-              internalType: "uint256",
+              name: "_team",
+              type: "string",
+              internalType: "string",
             },
           ],
           outputs: [],
@@ -200,42 +239,39 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "getPlayerStats",
+          name: "attackTeam",
           inputs: [
             {
-              name: "playerAddress",
-              type: "address",
-              internalType: "address",
-            },
-          ],
-          outputs: [
-            {
-              name: "username",
+              name: "_targetTeam",
               type: "string",
               internalType: "string",
             },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "getLeaderboard",
+          inputs: [],
+          outputs: [
             {
-              name: "teamId",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "totalDamageDealt",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "lastAttacks",
+              name: "",
               type: "tuple[]",
-              internalType: "struct MonanimalWars.Attack[]",
+              internalType: "struct MonanimalWars.LeaderboardEntry[]",
               components: [
                 {
-                  name: "timestamp",
-                  type: "uint256",
-                  internalType: "uint256",
+                  name: "playerAddress",
+                  type: "address",
+                  internalType: "address",
                 },
                 {
-                  name: "targetTeamId",
+                  name: "username",
+                  type: "string",
+                  internalType: "string",
+                },
+                {
+                  name: "damageDealt",
                   type: "uint256",
                   internalType: "uint256",
                 },
@@ -246,42 +282,58 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "getTeamStats",
+          name: "getPlayer",
           inputs: [
             {
-              name: "teamId",
-              type: "uint256",
-              internalType: "uint256",
+              name: "_player",
+              type: "address",
+              internalType: "address",
             },
           ],
           outputs: [
             {
-              name: "name",
-              type: "string",
-              internalType: "string",
+              name: "",
+              type: "tuple",
+              internalType: "struct MonanimalWars.Player",
+              components: [
+                {
+                  name: "username",
+                  type: "string",
+                  internalType: "string",
+                },
+                {
+                  name: "teamId",
+                  type: "uint8",
+                  internalType: "uint8",
+                },
+                {
+                  name: "isRegistered",
+                  type: "bool",
+                  internalType: "bool",
+                },
+                {
+                  name: "totalDamageDealt",
+                  type: "uint256",
+                  internalType: "uint256",
+                },
+              ],
             },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getPlayerDamage",
+          inputs: [
             {
-              name: "currentHP",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "totalDamageReceived",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "isActive",
-              type: "bool",
-              internalType: "bool",
-            },
-            {
-              name: "lastAttacker",
+              name: "_player",
               type: "address",
               internalType: "address",
             },
+          ],
+          outputs: [
             {
-              name: "memberCount",
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
@@ -290,16 +342,186 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "joinTeam",
+          name: "getTeamHP",
           inputs: [
             {
-              name: "teamId",
+              name: "_team",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint16",
+              internalType: "uint16",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getTeamName",
+          inputs: [
+            {
+              name: "_player",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getTeamPlayers",
+          inputs: [
+            {
+              name: "_team",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "address[]",
+              internalType: "address[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "healTeam",
+          inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "isEligibleForNFT",
+          inputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "isPlayerEligibleForNFT",
+          inputs: [
+            {
+              name: "player",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "leaderboard",
+          inputs: [
+            {
+              name: "",
               type: "uint256",
               internalType: "uint256",
             },
           ],
+          outputs: [
+            {
+              name: "playerAddress",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "username",
+              type: "string",
+              internalType: "string",
+            },
+            {
+              name: "damageDealt",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "mintMonavaraNFT",
+          inputs: [],
           outputs: [],
           stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "monavaraNFT",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "owner",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "playerAttackCount",
+          inputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
         },
         {
           type: "function",
@@ -319,8 +541,13 @@ const deployedContracts = {
             },
             {
               name: "teamId",
-              type: "uint256",
-              internalType: "uint256",
+              type: "uint8",
+              internalType: "uint8",
+            },
+            {
+              name: "isRegistered",
+              type: "bool",
+              internalType: "bool",
             },
             {
               name: "totalDamageDealt",
@@ -335,9 +562,29 @@ const deployedContracts = {
           name: "registerPlayer",
           inputs: [
             {
-              name: "username",
+              name: "_username",
               type: "string",
               internalType: "string",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "renounceOwnership",
+          inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setMonavaraNFT",
+          inputs: [
+            {
+              name: "_monavaraNFT",
+              type: "address",
+              internalType: "address",
             },
           ],
           outputs: [],
@@ -349,8 +596,8 @@ const deployedContracts = {
           inputs: [
             {
               name: "",
-              type: "uint256",
-              internalType: "uint256",
+              type: "uint8",
+              internalType: "uint8",
             },
           ],
           outputs: [
@@ -360,45 +607,125 @@ const deployedContracts = {
               internalType: "string",
             },
             {
-              name: "currentHP",
-              type: "uint256",
-              internalType: "uint256",
+              name: "id",
+              type: "uint8",
+              internalType: "uint8",
             },
             {
-              name: "totalDamageReceived",
-              type: "uint256",
-              internalType: "uint256",
-            },
-            {
-              name: "isActive",
-              type: "bool",
-              internalType: "bool",
-            },
-            {
-              name: "lastAttacker",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "memberCount",
-              type: "uint256",
-              internalType: "uint256",
+              name: "hp",
+              type: "uint16",
+              internalType: "uint16",
             },
           ],
           stateMutability: "view",
         },
         {
           type: "function",
-          name: "totalTeams",
-          inputs: [],
+          name: "transferOwnership",
+          inputs: [
+            {
+              name: "newOwner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "usernameExists",
+          inputs: [
+            {
+              name: "",
+              type: "string",
+              internalType: "string",
+            },
+          ],
           outputs: [
             {
               name: "",
-              type: "uint256",
-              internalType: "uint256",
+              type: "bool",
+              internalType: "bool",
             },
           ],
           stateMutability: "view",
+        },
+        {
+          type: "event",
+          name: "EligibleForNFT",
+          inputs: [
+            {
+              name: "player",
+              type: "address",
+              indexed: false,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "NFTMinted",
+          inputs: [
+            {
+              name: "player",
+              type: "address",
+              indexed: false,
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              indexed: false,
+              internalType: "uint256",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "OwnershipTransferred",
+          inputs: [
+            {
+              name: "previousOwner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "newOwner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "PlayerReassigned",
+          inputs: [
+            {
+              name: "player",
+              type: "address",
+              indexed: false,
+              internalType: "address",
+            },
+            {
+              name: "oldTeam",
+              type: "string",
+              indexed: false,
+              internalType: "string",
+            },
+            {
+              name: "newTeam",
+              type: "string",
+              indexed: false,
+              internalType: "string",
+            },
+          ],
+          anonymous: false,
         },
         {
           type: "event",
@@ -421,25 +748,50 @@ const deployedContracts = {
         },
         {
           type: "event",
-          name: "TeamAttacked",
+          name: "TeamAssigned",
           inputs: [
             {
-              name: "attacker",
+              name: "player",
               type: "address",
               indexed: false,
               internalType: "address",
             },
             {
-              name: "targetTeamId",
-              type: "uint256",
+              name: "team",
+              type: "string",
               indexed: false,
-              internalType: "uint256",
+              internalType: "string",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "TeamAttacked",
+          inputs: [
+            {
+              name: "attackingTeam",
+              type: "string",
+              indexed: false,
+              internalType: "string",
             },
             {
-              name: "newHP",
-              type: "uint256",
+              name: "attackedTeam",
+              type: "string",
               indexed: false,
-              internalType: "uint256",
+              internalType: "string",
+            },
+            {
+              name: "damage",
+              type: "uint16",
+              indexed: false,
+              internalType: "uint16",
+            },
+            {
+              name: "newHp",
+              type: "uint16",
+              indexed: false,
+              internalType: "uint16",
             },
           ],
           anonymous: false,
@@ -449,9 +801,478 @@ const deployedContracts = {
           name: "TeamDefeated",
           inputs: [
             {
-              name: "teamId",
-              type: "uint256",
+              name: "team",
+              type: "string",
               indexed: false,
+              internalType: "string",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "TeamHealed",
+          inputs: [
+            {
+              name: "team",
+              type: "string",
+              indexed: false,
+              internalType: "string",
+            },
+            {
+              name: "healAmount",
+              type: "uint16",
+              indexed: false,
+              internalType: "uint16",
+            },
+            {
+              name: "newHp",
+              type: "uint16",
+              indexed: false,
+              internalType: "uint16",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "error",
+          name: "OwnableInvalidOwner",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "OwnableUnauthorizedAccount",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+      ],
+      inheritedFunctions: {},
+      deploymentFile: "run-1737263150.json",
+      deploymentScript: "Deploy.s.sol",
+    },
+    MonavaraNFT: {
+      address: "0x457ccf29090fe5a24c19c1bc95f492168c0eafdb",
+      abi: [
+        {
+          type: "constructor",
+          inputs: [
+            {
+              name: "_baseTokenURI",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "approve",
+          inputs: [
+            {
+              name: "to",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "balanceOf",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "baseTokenURI",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getApproved",
+          inputs: [
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "hasMinted",
+          inputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "isApprovedForAll",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "operator",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "mint",
+          inputs: [
+            {
+              name: "player",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "monWarsContract",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "name",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "owner",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "ownerOf",
+          inputs: [
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "renounceOwnership",
+          inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "safeTransferFrom",
+          inputs: [
+            {
+              name: "from",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "to",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "safeTransferFrom",
+          inputs: [
+            {
+              name: "from",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "to",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "data",
+              type: "bytes",
+              internalType: "bytes",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setApprovalForAll",
+          inputs: [
+            {
+              name: "operator",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "approved",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setBaseURI",
+          inputs: [
+            {
+              name: "_baseTokenURI",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "setMonWarsContract",
+          inputs: [
+            {
+              name: "_monWarsContract",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "supportsInterface",
+          inputs: [
+            {
+              name: "interfaceId",
+              type: "bytes4",
+              internalType: "bytes4",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "symbol",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "tokenURI",
+          inputs: [
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "string",
+              internalType: "string",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "transferFrom",
+          inputs: [
+            {
+              name: "from",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "to",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "transferOwnership",
+          inputs: [
+            {
+              name: "newOwner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "event",
+          name: "Approval",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "approved",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              indexed: true,
               internalType: "uint256",
             },
           ],
@@ -459,26 +1280,201 @@ const deployedContracts = {
         },
         {
           type: "event",
-          name: "TeamJoined",
+          name: "ApprovalForAll",
           inputs: [
             {
-              name: "player",
+              name: "owner",
               type: "address",
-              indexed: false,
+              indexed: true,
               internalType: "address",
             },
             {
-              name: "teamId",
-              type: "uint256",
+              name: "operator",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "approved",
+              type: "bool",
               indexed: false,
+              internalType: "bool",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "OwnershipTransferred",
+          inputs: [
+            {
+              name: "previousOwner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "newOwner",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+          ],
+          anonymous: false,
+        },
+        {
+          type: "event",
+          name: "Transfer",
+          inputs: [
+            {
+              name: "from",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "to",
+              type: "address",
+              indexed: true,
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              indexed: true,
               internalType: "uint256",
             },
           ],
           anonymous: false,
         },
+        {
+          type: "error",
+          name: "ERC721IncorrectOwner",
+          inputs: [
+            {
+              name: "sender",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ERC721InsufficientApproval",
+          inputs: [
+            {
+              name: "operator",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ERC721InvalidApprover",
+          inputs: [
+            {
+              name: "approver",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ERC721InvalidOperator",
+          inputs: [
+            {
+              name: "operator",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ERC721InvalidOwner",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ERC721InvalidReceiver",
+          inputs: [
+            {
+              name: "receiver",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ERC721InvalidSender",
+          inputs: [
+            {
+              name: "sender",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "ERC721NonexistentToken",
+          inputs: [
+            {
+              name: "tokenId",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "OwnableInvalidOwner",
+          inputs: [
+            {
+              name: "owner",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
+        {
+          type: "error",
+          name: "OwnableUnauthorizedAccount",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+        },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1736645882.json",
+      deploymentFile: "run-1737263150.json",
       deploymentScript: "Deploy.s.sol",
     },
   },
