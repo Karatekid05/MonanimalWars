@@ -24,6 +24,8 @@ contract MonanimalWars is Ownable(msg.sender) {
         uint8 teamId; // ID da equipa (0 = sem equipa, 1-5 = índice do time + 1)
         bool isRegistered;
         uint256 totalDamageDealt; // Track total damage dealt by player
+        uint256 attackCount;
+        bool hasStartedSelection; // New field
     }
 
     // Estrutura para o leaderboard
@@ -52,24 +54,13 @@ contract MonanimalWars is Ownable(msg.sender) {
     // Eventos para logging
     event PlayerRegistered(address player, string username);
     event TeamAssigned(address player, string team);
-    event TeamAttacked(
-        string attackingTeam,
-        string attackedTeam,
-        uint16 damage,
-        uint16 newHp
-    );
+    event TeamAttacked(string attackingTeam, string attackedTeam, uint16 damage, uint16 newHp);
     event TeamHealed(string team, uint16 healAmount, uint16 newHp);
     event TeamDefeated(string team);
     event PlayerReassigned(address player, string oldTeam, string newTeam);
 
     // Array com os nomes das equipas disponíveis
-    string[] private teamNames = [
-        "Moyaki",
-        "Mopo",
-        "Chog",
-        "Salmonad",
-        "Mouch"
-    ];
+    string[] private teamNames = ["Moyaki", "Mopo", "Chog", "Salmonad", "Mouch"];
 
     // Add NFT-related state variables
     address public monavaraNFT;
@@ -78,6 +69,15 @@ contract MonanimalWars is Ownable(msg.sender) {
 
     event EligibleForNFT(address player);
     event NFTMinted(address player, uint256 tokenId);
+
+    // Add new mapping to store selected Monanimal
+    mapping(address => string) private selectedMonanimal;
+
+    // Add counter variables
+    uint256 public totalAttacks;
+    uint256 public totalHeals;
+    uint256 public totalTeamSelections;
+    uint256 public totalRegistrations;
 
     constructor() {
         // Inicializa as equipas
@@ -91,20 +91,10 @@ contract MonanimalWars is Ownable(msg.sender) {
     }
 
     // Function to generate random number with more entropy
-    function _random(
-        uint256 seed,
-        uint16 min,
-        uint16 max
-    ) private view returns (uint16) {
+    function _random(uint256 seed, uint16 min, uint16 max) private view returns (uint16) {
         bytes32 randomHash = keccak256(
             abi.encodePacked(
-                block.timestamp,
-                block.difficulty,
-                seed,
-                block.number,
-                msg.sender,
-                address(this).balance,
-                gasleft()
+                block.timestamp, block.difficulty, seed, block.number, msg.sender, address(this).balance, gasleft()
             )
         );
 
@@ -121,22 +111,32 @@ contract MonanimalWars is Ownable(msg.sender) {
         players[msg.sender].isRegistered = true;
         players[msg.sender].teamId = 0;
         players[msg.sender].totalDamageDealt = 0;
+        players[msg.sender].attackCount = 0;
+        players[msg.sender].hasStartedSelection = false;
         usernameExists[_username] = true;
+        totalRegistrations++;
 
         emit PlayerRegistered(msg.sender, _username);
     }
 
-    // Função para associar uma equipa ao jogador
-    function assignTeam(string calldata _team) external {
+    // Combine startSelection and assignTeam into one function
+    function selectTeam() external {
         require(players[msg.sender].isRegistered, "Player not registered");
         require(players[msg.sender].teamId == 0, "Team already assigned");
 
-        uint8 teamId = teamNameToId[_team];
-        require(teamId > 0, "Invalid team");
+        // Generate random team index
+        uint256 randomIndex = uint256(
+            keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender, address(this).balance, gasleft()))
+        ) % teamNames.length;
 
+        string memory selectedTeam = teamNames[randomIndex];
+        uint8 teamId = teamNameToId[selectedTeam];
+
+        // Assign team immediately
         players[msg.sender].teamId = teamId;
         teams[teamId].players.push(msg.sender);
-        emit TeamAssigned(msg.sender, _team);
+        totalTeamSelections++;
+        emit TeamAssigned(msg.sender, selectedTeam);
     }
 
     // Add function to set NFT contract address
@@ -146,14 +146,8 @@ contract MonanimalWars is Ownable(msg.sender) {
 
     // Add function to check eligibility
     function checkNFTEligibility(address player) private {
-        if (
-            !isEligibleForNFT[player] &&
-            !IMonavaraNFT(monavaraNFT).hasMinted(player)
-        ) {
-            if (
-                playerAttackCount[player] >= 10 ||
-                players[player].totalDamageDealt >= 1000
-            ) {
+        if (!isEligibleForNFT[player] && !IMonavaraNFT(monavaraNFT).hasMinted(player)) {
+            if (playerAttackCount[player] >= 10 || players[player].totalDamageDealt >= 1000) {
                 isEligibleForNFT[player] = true;
                 emit EligibleForNFT(player);
             }
@@ -164,10 +158,7 @@ contract MonanimalWars is Ownable(msg.sender) {
     function mintMonavaraNFT() external {
         require(isEligibleForNFT[msg.sender], "Not eligible for NFT");
         require(monavaraNFT != address(0), "NFT contract not set");
-        require(
-            !IMonavaraNFT(monavaraNFT).hasMinted(msg.sender),
-            "Already minted NFT"
-        );
+        require(!IMonavaraNFT(monavaraNFT).hasMinted(msg.sender), "Already minted NFT");
 
         uint256 tokenId = IMonavaraNFT(monavaraNFT).mint(msg.sender);
         emit NFTMinted(msg.sender, tokenId);
@@ -180,20 +171,11 @@ contract MonanimalWars is Ownable(msg.sender) {
 
         uint8 targetTeamId = teamNameToId[_targetTeam];
         require(targetTeamId > 0, "Invalid target team");
-        require(
-            targetTeamId != players[msg.sender].teamId,
-            "Cannot attack own team"
-        );
+        require(targetTeamId != players[msg.sender].teamId, "Cannot attack own team");
         require(teams[targetTeamId].hp > 0, "Team already defeated");
 
-        uint16 damage = _random(
-            uint256(uint160(msg.sender)),
-            MIN_ATTACK,
-            MAX_ATTACK
-        );
-        uint16 newHp = teams[targetTeamId].hp > damage
-            ? teams[targetTeamId].hp - damage
-            : 0;
+        uint16 damage = _random(uint256(uint160(msg.sender)), MIN_ATTACK, MAX_ATTACK);
+        uint16 newHp = teams[targetTeamId].hp > damage ? teams[targetTeamId].hp - damage : 0;
         teams[targetTeamId].hp = newHp;
 
         players[msg.sender].totalDamageDealt += damage;
@@ -205,12 +187,8 @@ contract MonanimalWars is Ownable(msg.sender) {
             checkNFTEligibility(msg.sender);
         }
 
-        emit TeamAttacked(
-            teams[players[msg.sender].teamId].name,
-            _targetTeam,
-            damage,
-            newHp
-        );
+        totalAttacks++;
+        emit TeamAttacked(teams[players[msg.sender].teamId].name, _targetTeam, damage, newHp);
 
         // If team is defeated, reassign its players
         if (newHp == 0) {
@@ -227,25 +205,20 @@ contract MonanimalWars is Ownable(msg.sender) {
         require(teams[teamId].hp > 0, "Cannot heal defeated team");
         require(teams[teamId].hp < MAX_HP, "Team already at max HP");
 
-        uint16 healAmount = _random(
-            uint256(uint160(msg.sender)),
-            MIN_HEAL,
-            MAX_HEAL
-        );
+        uint16 healAmount = _random(uint256(uint160(msg.sender)), MIN_HEAL, MAX_HEAL);
         uint16 currentHp = teams[teamId].hp;
-        uint16 newHp = currentHp + healAmount > MAX_HP
-            ? MAX_HP
-            : currentHp + healAmount;
+        uint16 newHp = currentHp + healAmount > MAX_HP ? MAX_HP : currentHp + healAmount;
         healAmount = newHp - currentHp;
 
         teams[teamId].hp = newHp;
+        totalHeals++;
         emit TeamHealed(teams[teamId].name, healAmount, newHp);
     }
 
     // Função para atualizar o leaderboard
     function _updateLeaderboard(address player) private {
         // Find if player is already in leaderboard
-        for (uint i = 0; i < leaderboard.length; i++) {
+        for (uint256 i = 0; i < leaderboard.length; i++) {
             if (leaderboard[i].playerAddress == player) {
                 leaderboard[i].damageDealt = players[player].totalDamageDealt;
                 _sortLeaderboard();
@@ -262,10 +235,7 @@ contract MonanimalWars is Ownable(msg.sender) {
                     damageDealt: players[player].totalDamageDealt
                 })
             );
-        } else if (
-            players[player].totalDamageDealt >
-            leaderboard[leaderboard.length - 1].damageDealt
-        ) {
+        } else if (players[player].totalDamageDealt > leaderboard[leaderboard.length - 1].damageDealt) {
             leaderboard[leaderboard.length - 1] = LeaderboardEntry({
                 playerAddress: player,
                 username: players[player].username,
@@ -277,12 +247,10 @@ contract MonanimalWars is Ownable(msg.sender) {
 
     // Função para ordenar o leaderboard
     function _sortLeaderboard() private {
-        uint n = leaderboard.length;
-        for (uint i = 0; i < n - 1; i++) {
-            for (uint j = 0; j < n - i - 1; j++) {
-                if (
-                    leaderboard[j].damageDealt < leaderboard[j + 1].damageDealt
-                ) {
+        uint256 n = leaderboard.length;
+        for (uint256 i = 0; i < n - 1; i++) {
+            for (uint256 j = 0; j < n - i - 1; j++) {
+                if (leaderboard[j].damageDealt < leaderboard[j + 1].damageDealt) {
                     LeaderboardEntry memory temp = leaderboard[j];
                     leaderboard[j] = leaderboard[j + 1];
                     leaderboard[j + 1] = temp;
@@ -296,9 +264,7 @@ contract MonanimalWars is Ownable(msg.sender) {
         return players[_player];
     }
 
-    function getTeamName(
-        address _player
-    ) external view returns (string memory) {
+    function getTeamName(address _player) external view returns (string memory) {
         uint8 teamId = players[_player].teamId;
         require(teamId > 0, "No team assigned");
         return teams[teamId].name;
@@ -310,19 +276,13 @@ contract MonanimalWars is Ownable(msg.sender) {
         return teams[teamId].hp;
     }
 
-    function getTeamPlayers(
-        string calldata _team
-    ) external view returns (address[] memory) {
+    function getTeamPlayers(string calldata _team) external view returns (address[] memory) {
         uint8 teamId = teamNameToId[_team];
         require(teamId > 0, "Invalid team");
         return teams[teamId].players;
     }
 
-    function getLeaderboard()
-        external
-        view
-        returns (LeaderboardEntry[] memory)
-    {
+    function getLeaderboard() external view returns (LeaderboardEntry[] memory) {
         return leaderboard;
     }
 
@@ -330,55 +290,128 @@ contract MonanimalWars is Ownable(msg.sender) {
         return players[_player].totalDamageDealt;
     }
 
-    // Function to find a team with HP > 0
-    function _findAvailableTeam() private view returns (uint8) {
-        uint8[] memory availableTeams = new uint8[](teamNames.length);
-        uint8 count = 0;
+    /**
+     * @dev Encontra a equipe com o menor número de membros entre as equipes vivas
+     * @return uint8 ID da equipe com menos membros
+     */
+    function _getTeamWithLeastMembers() private view returns (uint8) {
+        uint8 teamWithLeast = 0;
+        uint256 minMembers = type(uint256).max;
 
         for (uint8 i = 1; i <= teamNames.length; i++) {
             if (teams[i].hp > 0) {
-                availableTeams[count] = i;
+                // Só considera equipes que ainda estão vivas
+                uint256 memberCount = teams[i].players.length;
+                if (memberCount < minMembers) {
+                    minMembers = memberCount;
+                    teamWithLeast = i;
+                }
+            }
+        }
+        return teamWithLeast;
+    }
+
+    /**
+     * @dev Encontra todas as equipes que têm exatamente o número especificado de membros
+     * @param targetCount Número de membros a procurar
+     * @return uint8[] Array com os IDs das equipes que têm o número especificado de membros
+     */
+    function _getTeamsWithMemberCount(uint256 targetCount) private view returns (uint8[] memory) {
+        uint8[] memory eligibleTeams = new uint8[](teamNames.length);
+        uint8 count = 0;
+
+        // Primeiro passo: encontra todas as equipes elegíveis
+        for (uint8 i = 1; i <= teamNames.length; i++) {
+            if (teams[i].hp > 0 && teams[i].players.length == targetCount) {
+                eligibleTeams[count] = i;
                 count++;
             }
         }
 
-        require(count > 0, "No available teams");
-        // Pick a random team from available ones
-        uint8 randomIndex = uint8(_random(block.timestamp, 0, count - 1));
-        return availableTeams[randomIndex];
+        // Segundo passo: cria um array do tamanho exato necessário
+        uint8[] memory result = new uint8[](count);
+        for (uint8 i = 0; i < count; i++) {
+            result[i] = eligibleTeams[i];
+        }
+        return result;
     }
 
-    // Function to reassign players when their team is defeated
+    /**
+     * @dev Redistribui os jogadores de uma equipe derrotada para manter o balanceamento
+     * @param defeatedTeamId ID da equipe que foi derrotada
+     *
+     * Processo de balanceamento:
+     * 1. Encontra a equipe com menos membros
+     * 2. Identifica todas as equipes com esse mesmo número de membros
+     * 3. Distribui os jogadores proporcionalmente entre essas equipes
+     * 4. Repete o processo até todos os jogadores serem realocados
+     */
     function _reassignTeamPlayers(uint8 defeatedTeamId) private {
         address[] memory playersToReassign = teams[defeatedTeamId].players;
+        uint256 totalPlayers = playersToReassign.length;
+        uint256 reassignedCount = 0;
 
-        for (uint i = 0; i < playersToReassign.length; i++) {
-            address player = playersToReassign[i];
-            uint8 newTeamId = _findAvailableTeam();
+        while (reassignedCount < totalPlayers) {
+            // Passo 1: Encontra a equipe com menos membros
+            uint8 teamWithLeast = _getTeamWithLeastMembers();
+            uint256 leastMembers = teams[teamWithLeast].players.length;
 
-            // Update player's team
-            players[player].teamId = newTeamId;
+            // Passo 2: Encontra todas as equipes com o mesmo número mínimo de membros
+            uint8[] memory teamsWithLeastMembers = _getTeamsWithMemberCount(leastMembers);
 
-            // Add player to new team
-            teams[newTeamId].players.push(player);
+            // Passo 3: Calcula a distribuição proporcional
+            uint256 remainingPlayers = totalPlayers - reassignedCount;
+            uint256 teamsToBalance = teamsWithLeastMembers.length;
+            uint256 playersPerTeam = remainingPlayers / teamsToBalance;
+            uint256 extraPlayers = remainingPlayers % teamsToBalance; // Distribui os jogadores extras um por equipe
 
-            emit PlayerReassigned(
-                player,
-                teams[defeatedTeamId].name,
-                teams[newTeamId].name
-            );
+            // Passo 4: Distribui os jogadores entre as equipes com menos membros
+            for (uint256 i = 0; i < teamsWithLeastMembers.length && reassignedCount < totalPlayers; i++) {
+                uint8 targetTeamId = teamsWithLeastMembers[i];
+                // Adiciona um jogador extra para as primeiras equipes se houver resto na divisão
+                uint256 playersForThisTeam = playersPerTeam + (i < extraPlayers ? 1 : 0);
+
+                // Realoca os jogadores para esta equipe
+                for (uint256 j = 0; j < playersForThisTeam && reassignedCount < totalPlayers; j++) {
+                    address playerToReassign = playersToReassign[reassignedCount];
+
+                    // Atualiza o registro do jogador
+                    players[playerToReassign].teamId = targetTeamId;
+
+                    // Adiciona o jogador à nova equipe
+                    teams[targetTeamId].players.push(playerToReassign);
+
+                    // Emite evento para tracking
+                    emit PlayerReassigned(playerToReassign, teams[defeatedTeamId].name, teams[targetTeamId].name);
+
+                    reassignedCount++;
+                }
+            }
         }
 
-        // Clear the defeated team's players array
+        // Limpa o array de jogadores da equipe derrotada
         delete teams[defeatedTeamId].players;
     }
 
     // Add view function to check if player is eligible
-    function isPlayerEligibleForNFT(
-        address player
-    ) external view returns (bool) {
+    function isPlayerEligibleForNFT(address player) external view returns (bool) {
         if (monavaraNFT == address(0)) return false;
         if (IMonavaraNFT(monavaraNFT).hasMinted(player)) return false;
         return isEligibleForNFT[player];
+    }
+
+    // Add function to get selected Monanimal
+    function getSelectedMonanimal(address player) external view returns (string memory) {
+        require(players[player].hasStartedSelection, "Selection not started");
+        return selectedMonanimal[player];
+    }
+
+    function hasStartedSelection(address player) external view returns (bool) {
+        return players[player].hasStartedSelection;
+    }
+
+    // Add function to get total transactions
+    function getTotalTransactions() external view returns (uint256) {
+        return totalAttacks + totalHeals + totalTeamSelections + totalRegistrations;
     }
 }

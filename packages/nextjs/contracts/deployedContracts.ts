@@ -152,7 +152,7 @@ const deployedContracts = {
       deploymentScript: "Deploy.s.sol",
     },
     MonanimalWars: {
-      address: "0x1f10f3ba7acb61b2f50b9d6ddcf91a6f787c0e82",
+      address: "0xa56f946d6398dd7d9d4d9b337cf9e0f68982ca5b",
       abi: [
         {
           type: "constructor",
@@ -223,19 +223,6 @@ const deployedContracts = {
             },
           ],
           stateMutability: "view",
-        },
-        {
-          type: "function",
-          name: "assignTeam",
-          inputs: [
-            {
-              name: "_team",
-              type: "string",
-              internalType: "string",
-            },
-          ],
-          outputs: [],
-          stateMutability: "nonpayable",
         },
         {
           type: "function",
@@ -316,6 +303,16 @@ const deployedContracts = {
                   type: "uint256",
                   internalType: "uint256",
                 },
+                {
+                  name: "attackCount",
+                  type: "uint256",
+                  internalType: "uint256",
+                },
+                {
+                  name: "hasStartedSelection",
+                  type: "bool",
+                  internalType: "bool",
+                },
               ],
             },
           ],
@@ -336,6 +333,25 @@ const deployedContracts = {
               name: "",
               type: "uint256",
               internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getSelectedMonanimal",
+          inputs: [
+            {
+              name: "player",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "string",
+              internalType: "string",
             },
           ],
           stateMutability: "view",
@@ -393,6 +409,38 @@ const deployedContracts = {
               name: "",
               type: "address[]",
               internalType: "address[]",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "getTotalTransactions",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "hasStartedSelection",
+          inputs: [
+            {
+              name: "player",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+              internalType: "bool",
             },
           ],
           stateMutability: "view",
@@ -554,6 +602,16 @@ const deployedContracts = {
               type: "uint256",
               internalType: "uint256",
             },
+            {
+              name: "attackCount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+            {
+              name: "hasStartedSelection",
+              type: "bool",
+              internalType: "bool",
+            },
           ],
           stateMutability: "view",
         },
@@ -573,6 +631,13 @@ const deployedContracts = {
         {
           type: "function",
           name: "renounceOwnership",
+          inputs: [],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
+          name: "selectTeam",
           inputs: [],
           outputs: [],
           stateMutability: "nonpayable",
@@ -615,6 +680,58 @@ const deployedContracts = {
               name: "hp",
               type: "uint16",
               internalType: "uint16",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "totalAttacks",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "totalHeals",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "totalRegistrations",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "view",
+        },
+        {
+          type: "function",
+          name: "totalTeamSelections",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
             },
           ],
           stateMutability: "view",
@@ -858,11 +975,11 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1737263150.json",
+      deploymentFile: "run-1737327972.json",
       deploymentScript: "Deploy.s.sol",
     },
     MonavaraNFT: {
-      address: "0x457ccf29090fe5a24c19c1bc95f492168c0eafdb",
+      address: "0x5d42ebdbba61412295d7b0302d6f50ac449ddb4f",
       abi: [
         {
           type: "constructor",
@@ -1474,7 +1591,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1737263150.json",
+      deploymentFile: "run-1737327972.json",
       deploymentScript: "Deploy.s.sol",
     },
   },

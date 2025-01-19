@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
-import { useScaffoldContract } from "~~/hooks/scaffold-eth";
+import Link from "next/link";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
+import { useScaffoldContract } from "~~/hooks/scaffold-eth";
+
+const monanimals = [
+  { name: "Moyaki", image: "/images/Moyaki.png" },
+  { name: "Mopo", image: "/images/mopo.png" },
+  { name: "Chog", image: "/images/Chog1.png" },
+  { name: "Salmonad", image: "/images/Salmonad1.png" },
+  { name: "Mouch", image: "/images/mosca.png" },
+];
 
 export const Header = () => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -34,22 +42,26 @@ export const Header = () => {
   });
 
   // Add leaderboard state
-  const [leaderboard, setLeaderboard] = useState<Array<{
-    playerAddress: string;
-    username: string;
-    damageDealt: number;
-  }>>([]);
+  const [leaderboard, setLeaderboard] = useState<
+    Array<{
+      playerAddress: string;
+      username: string;
+      damageDealt: number;
+    }>
+  >([]);
 
   // Add function to fetch leaderboard
   const fetchLeaderboard = async () => {
     if (monWarsContract) {
       try {
         const leaderboardData = await monWarsContract.read.getLeaderboard();
-        setLeaderboard(leaderboardData.map(entry => ({
-          playerAddress: entry.playerAddress,
-          username: entry.username,
-          damageDealt: Number(entry.damageDealt)
-        })));
+        setLeaderboard(
+          leaderboardData.map(entry => ({
+            playerAddress: entry.playerAddress,
+            username: entry.username,
+            damageDealt: Number(entry.damageDealt),
+          })),
+        );
       } catch (error) {
         console.error("Error fetching leaderboard:", error);
       }
@@ -71,9 +83,7 @@ export const Header = () => {
           setIsRegistered(player.isRegistered);
           if (player.isRegistered) {
             setUsername(player.username);
-            // Se o usuário tem um teamId diferente de 0, significa que já tem uma equipe
             if (player.teamId > 0) {
-              // Encontrar o Monanimal correspondente ao teamId
               const teamName = await monWarsContract.read.getTeamName([address]);
               const team = monanimals.find(m => m.name === teamName);
               if (team) {
@@ -125,88 +135,51 @@ export const Header = () => {
     }
   };
 
-  // Associar equipa
-  const handleTeamAssignment = async () => {
-    if (!monWarsContract || !publicClient) {
-      alert("Please connect your wallet first");
-      return;
-    }
-
-    if (monanimalRevealed?.name) {
-      try {
-        const hash = await monWarsContract.write.assignTeam([monanimalRevealed.name]);
-        console.log("Waiting for team assignment confirmation...");
-
-        const receipt = await publicClient.waitForTransactionReceipt({ hash });
-        console.log("Team assignment successful", receipt);
-        setSelectedMonanimal(monanimalRevealed);
-        setShowKingPopup(false);
-      } catch (error: any) {
-        console.error("Error assigning team:", error);
-        if (error.message.includes("Team already assigned")) {
-          alert("You already have a team assigned.");
-        } else if (error.message.includes("Player not registered")) {
-          alert("You need to register first.");
-        } else {
-          alert("Error assigning team. Please try again.");
-        }
-      }
-    }
-  };
-
-  const monanimals = [
-    { name: "Moyaki", image: "/images/Moyaki.png" },
-    { name: "Mopo", image: "/images/mopo.png" },
-    { name: "Chog", image: "/images/Chog1.png" },
-    { name: "Salmonad", image: "/images/Salmonad1.png" },
-    { name: "Mouch", image: "/images/mosca.png" },
-  ];
-
   const selectRandomMonanimal = () => {
-    // Não permitir seleção se já tiver uma equipe
-    if (!selectedMonanimal && isRegistered) {
-      setShowKingPopup(true);
+    // Just show the popup, no transaction yet
+    setShowKingPopup(true);
+  };
+
+  const revealMonanimal = async () => {
+    if (!monWarsContract || !publicClient) return;
+
+    try {
+      setAnimationStarted(true);
+
+      // Wait for animation
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Select team in one transaction
+      const hash = await monWarsContract.write.selectTeam();
+      console.log("Waiting for team selection confirmation...");
+      await publicClient.waitForTransactionReceipt({ hash });
+
+      // Get the assigned team
+      const teamName = await monWarsContract.read.getTeamName([address as string]);
+      const team = monanimals.find(m => m.name === teamName);
+
+      if (team) {
+        setMonanimalRevealed(team);
+        setSelectedMonanimal(team);
+      }
+
       setAnimationStarted(false);
-      setMonanimalRevealed(null);
+    } catch (error) {
+      console.error("Error selecting team:", error);
+      setAnimationStarted(false);
+      setShowKingPopup(false);
     }
   };
 
-  const revealMonanimal = () => {
-    setAnimationStarted(true);
-    setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * monanimals.length);
-      setMonanimalRevealed(monanimals[randomIndex]);
-      setAnimationStarted(false);
-    }, 3000);
+  const finalizeSelection = () => {
+    setShowKingPopup(false);
   };
-
-  const finalizeSelection = async () => {
-    if (monanimalRevealed) {
-      await handleTeamAssignment();
-    }
-  };
-
-  const closeLeaderboard = () => setShowLeaderboard(false);
-
-  const demoLeaderboardData = [
-    { username: "Player1", attack: 30, heal: 10, totalPoints: 200 },
-    { username: "Player2", attack: 25, heal: 15, totalPoints: 180 },
-    { username: "Player3", attack: 20, heal: 20, totalPoints: 160 },
-    { username: "Player4", attack: 15, heal: 25, totalPoints: 140 },
-    { username: "Player5", attack: 10, heal: 30, totalPoints: 120 },
-  ];
 
   return (
     <div className="sticky top-0 navbar bg-base-200 min-h-0 flex-shrink-0 justify-between z-20 border-b-2 border-base-100 px-4 py-4">
       <div className="navbar-start flex gap-4 items-center">
         <Link href="/" className="hover:opacity-75 transition-opacity">
-          <Image
-            src="/images/placa.png"
-            alt="Monanimal Wars Logo"
-            width={80}
-            height={28}
-            className="object-contain"
-          />
+          <Image src="/images/placa.png" alt="Monanimal Wars Logo" width={80} height={28} className="object-contain" />
         </Link>
         <button
           onClick={handleShowLeaderboard}
@@ -214,6 +187,9 @@ export const Header = () => {
         >
           Show Leaderboard
         </button>
+        <Link href="/statistics" className="btn btn-info text-white font-bold px-4 py-2 rounded-md hover:bg-info-focus">
+          Statistics
+        </Link>
         <Link
           href="/team"
           className="btn btn-secondary text-white font-bold px-4 py-2 rounded-md hover:bg-secondary-focus"
@@ -224,22 +200,15 @@ export const Header = () => {
 
       <div className="navbar-end flex gap-4">
         {!isRegistered ? (
-          <button
-            onClick={() => setShowUsernameModal(true)}
-            className="btn btn-primary"
-          >
+          <button onClick={() => setShowUsernameModal(true)} className="btn btn-primary">
             Register Username
           </button>
         ) : (
-          <div className="font-bold text-lg">
-            {username}
-          </div>
+          <div className="font-bold text-lg">{username}</div>
         )}
-        {isRegistered && (
-          selectedMonanimal ? (
-            <div className="font-bold text-lg text-purple-500">
-              Team: {selectedMonanimal.name}
-            </div>
+        {isRegistered &&
+          (selectedMonanimal ? (
+            <div className="font-bold text-lg text-purple-500">Team: {selectedMonanimal.name}</div>
           ) : (
             <button
               onClick={selectRandomMonanimal}
@@ -247,8 +216,7 @@ export const Header = () => {
             >
               Select Monanimal
             </button>
-          )
-        )}
+          ))}
         <RainbowKitCustomConnectButton />
       </div>
 
@@ -260,14 +228,11 @@ export const Header = () => {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={e => setUsername(e.target.value)}
               placeholder="Enter your username"
               className="w-full p-2 border border-gray-300 rounded mb-4"
             />
-            <button
-              onClick={handleRegisterUsername}
-              className="btn btn-primary w-full"
-            >
+            <button onClick={handleRegisterUsername} className="btn btn-primary w-full">
               Confirm
             </button>
           </div>
@@ -281,24 +246,30 @@ export const Header = () => {
               <>
                 {!animationStarted ? (
                   <>
-                    <h2 className="text-xl font-bold mb-4">King Monavara&apos;s Decision</h2>
-                    <Image
-                      src="/images/Monavara-scooter.png"
-                      alt="King Monavara"
-                      width={128}
-                      height={128}
-                      className="mx-auto mb-4"
-                    />
-                    <p className="text-center text-lg font-bold">
-                      Now King Monavara will decide your path on the battlefield.
-                    </p>
-                    <p className="text-center text-sm">Fight with honor and seek glory!</p>
-                    <button
-                      onClick={revealMonanimal}
-                      className="btn btn-primary mt-4 mx-auto"
-                    >
-                      Reveal Your Monanimal
-                    </button>
+                    <h2 className="text-2xl font-bold mb-4 text-center">King Monavara&apos;s Decision</h2>
+                    <div className="flex flex-col items-center">
+                      <Image
+                        src="/images/Monavara-scooter.png"
+                        alt="King Monavara"
+                        width={128}
+                        height={128}
+                        className="mb-4"
+                      />
+                      <p className="text-center text-lg font-bold mb-2">
+                        Now King Monavara will decide your path on the battlefield.
+                      </p>
+                      <p className="text-center text-sm mb-4">Fight with honor and seek glory!</p>
+                      <button
+                        onClick={revealMonanimal}
+                        className="btn btn-primary mt-4 hover:bg-purple-600 transition-colors duration-200"
+                        style={{
+                          padding: "0.75rem 1.5rem",
+                          borderRadius: "0.5rem",
+                        }}
+                      >
+                        Reveal Your Monanimal
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <p className="text-center text-lg font-bold">The decision is being made...</p>
@@ -306,21 +277,27 @@ export const Header = () => {
               </>
             ) : (
               <>
-                <h2 className="text-xl font-bold mb-4">Your Monanimal</h2>
-                <Image
-                  src={monanimalRevealed?.image || ""}
-                  alt={monanimalRevealed?.name || ""}
-                  width={128}
-                  height={128}
-                  className="mx-auto mb-4"
-                />
-                <p className="text-center text-lg font-bold">{monanimalRevealed?.name}</p>
-                <button
-                  onClick={finalizeSelection}
-                  className="btn btn-primary mt-4 mx-auto"
-                >
-                  Confirm Team
-                </button>
+                <h2 className="text-2xl font-bold mb-4 text-center">Your Monanimal</h2>
+                <div className="flex flex-col items-center">
+                  <Image
+                    src={monanimalRevealed?.image || ""}
+                    alt={monanimalRevealed?.name || ""}
+                    width={128}
+                    height={128}
+                    className="mb-4"
+                  />
+                  <p className="text-center text-lg font-bold mb-4">{monanimalRevealed?.name}</p>
+                  <button
+                    onClick={finalizeSelection}
+                    className="btn btn-primary mt-4 hover:bg-purple-600 transition-colors duration-200"
+                    style={{
+                      padding: "0.75rem 1.5rem",
+                      borderRadius: "0.5rem",
+                    }}
+                  >
+                    Confirm
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -350,7 +327,9 @@ export const Header = () => {
                   {leaderboard.map((player, index) => (
                     <tr
                       key={player.playerAddress}
-                      className={`${player.playerAddress === address ? 'bg-purple-100' : index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
+                      className={`${
+                        player.playerAddress === address ? "bg-purple-100" : index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      }`}
                     >
                       <td className="py-2 px-4">{index + 1}</td>
                       <td className="py-2 px-4">{player.username}</td>

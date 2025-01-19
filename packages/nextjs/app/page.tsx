@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useAccount } from "wagmi";
+import { usePublicClient, useWalletClient } from "wagmi";
 import { useScaffoldContract } from "~~/hooks/scaffold-eth";
-import { useWalletClient, usePublicClient } from 'wagmi';
 
 const Home = () => {
   // Contract and wallet state
@@ -21,22 +21,20 @@ const Home = () => {
   const [teamHPs, setTeamHPs] = useState<{ [key: string]: number }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [playerDamage, setPlayerDamage] = useState<number>(0);
-  const [leaderboard, setLeaderboard] = useState<Array<{
-    playerAddress: string;
-    username: string;
-    damageDealt: number;
-  }>>([]);
   const [isEligibleForNFT, setIsEligibleForNFT] = useState(false);
   const [showNFTPopup, setShowNFTPopup] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
 
-  const monanimals = [
-    { name: "Moyaki", image: "/images/Moyaki.png" },
-    { name: "Mopo", image: "/images/mopo.png" },
-    { name: "Chog", image: "/images/Chog1.png" },
-    { name: "Salmonad", image: "/images/Salmonad1.png" },
-    { name: "Mouch", image: "/images/mosca.png" },
-  ];
+  const monanimals = useMemo(
+    () => [
+      { name: "Moyaki", image: "/images/Moyaki.png" },
+      { name: "Mopo", image: "/images/mopo.png" },
+      { name: "Chog", image: "/images/Chog1.png" },
+      { name: "Salmonad", image: "/images/Salmonad1.png" },
+      { name: "Mouch", image: "/images/mosca.png" },
+    ],
+    [],
+  );
 
   // Fetch player's team, HPs, and leaderboard data
   useEffect(() => {
@@ -54,9 +52,7 @@ const Home = () => {
           }
 
           // Get all team HPs in parallel
-          const hpPromises = monanimals.map(monanimal =>
-            monWarsContract.read.getTeamHP([monanimal.name])
-          );
+          const hpPromises = monanimals.map(monanimal => monWarsContract.read.getTeamHP([monanimal.name]));
           const hpResults = await Promise.all(hpPromises);
           const hps: { [key: string]: number } = {};
           monanimals.forEach((monanimal, index) => {
@@ -83,11 +79,11 @@ const Home = () => {
         publicClient.watchContractEvent({
           address: monWarsContract.address,
           abi: monWarsContract.abi,
-          eventName: 'TeamDefeated' as any,
+          eventName: "TeamDefeated" as any,
           onLogs: (logs: any[]) => {
             if (logs[0]?.args) {
               const { team } = logs[0].args;
-              console.log('Team defeated:', team);
+              console.log("Team defeated:", team);
               fetchGameState(); // Refresh game state
             }
           },
@@ -97,12 +93,12 @@ const Home = () => {
         publicClient.watchContractEvent({
           address: monWarsContract.address,
           abi: monWarsContract.abi,
-          eventName: 'PlayerReassigned' as any,
+          eventName: "PlayerReassigned" as any,
           onLogs: (logs: any[]) => {
             if (logs[0]?.args) {
               const { player, oldTeam, newTeam } = logs[0].args;
               if (player === address) {
-                console.log('You have been reassigned from', oldTeam, 'to', newTeam);
+                console.log("You have been reassigned from", oldTeam, "to", newTeam);
                 fetchGameState(); // Refresh game state
                 // Show notification to user
                 alert(`Your team was defeated! You have been reassigned to team ${newTeam}`);
@@ -117,7 +113,7 @@ const Home = () => {
     setupEventListeners();
     const interval = setInterval(fetchGameState, 10000);
     return () => clearInterval(interval);
-  }, [monWarsContract, address, publicClient]);
+  }, [address, monWarsContract, isEligibleForNFT, monanimals, publicClient]);
 
   const handleAttack = async (teamName: string) => {
     if (!monWarsContract || !publicClient || !playerTeam) {
@@ -157,7 +153,7 @@ const Home = () => {
       // Update HP and player damage after heal
       const [newHP, player] = await Promise.all([
         monWarsContract.read.getTeamHP([playerTeam]),
-        monWarsContract.read.getPlayer([address as string])
+        monWarsContract.read.getPlayer([address as string]),
       ]);
 
       setTeamHPs(prev => ({ ...prev, [playerTeam]: Number(newHP) }));
@@ -198,11 +194,9 @@ const Home = () => {
     >
       {/* Main Content */}
       <div className="flex flex-col flex-grow pt-20">
-        <h2 className="text-center text-3xl font-bold mb-8 text-white">
-          Welcome to Monanimal Wars
-        </h2>
+        <h2 className="text-center text-3xl font-bold mb-8 text-white">Welcome to Monanimal Wars</h2>
         <p className="text-center text-lg mb-12 text-white">
-          Choose your favorite Monanimal and attack or heal them! Actions are logged on the blockchain.
+          Choose your Monanimal and attack or heal them! Actions are logged on the blockchain.
         </p>
 
         {/* Game Status Message */}
@@ -220,22 +214,24 @@ const Home = () => {
 
         {/* Grid of Monanimal Cards */}
         <div
-          className="w-full p-8 rounded-lg"
+          className="w-full p-8 rounded-lg overflow-x-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-purple-100"
           style={{
             backgroundImage: `url('/images/BG_team.png')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            scrollbarWidth: "thin",
+            msOverflowStyle: "none",
           }}
         >
           {/* Player's Team Section */}
           {playerTeam && (
-            <div className="flex justify-center mb-16">
+            <div className="flex justify-center mb-16 min-w-fit px-4">
               {monanimals
                 .filter(monanimal => monanimal.name === playerTeam)
-                .map((monanimal) => (
+                .map(monanimal => (
                   <div
                     key={monanimal.name}
-                    className="bg-white/80 backdrop-blur-sm text-center rounded-3xl shadow-lg flex-shrink-0 flex flex-col transform transition-transform duration-300 hover:scale-105"
+                    className="bg-white/80 backdrop-blur-sm text-center rounded-3xl shadow-lg flex-shrink-0 flex flex-col transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
                     style={{
                       backgroundImage: "url('/images/carta_devnet.png')",
                       backgroundSize: "contain",
@@ -243,6 +239,7 @@ const Home = () => {
                       backgroundPosition: "center",
                       height: "408px",
                       width: "286px",
+                      transition: "all 0.3s ease-in-out",
                     }}
                   >
                     {/* Image Section */}
@@ -252,7 +249,7 @@ const Home = () => {
                         alt={monanimal.name}
                         width={120}
                         height={120}
-                        className={`mx-auto ${teamHPs[monanimal.name] === 0 ? 'opacity-50 grayscale' : ''}`}
+                        className={`mx-auto ${teamHPs[monanimal.name] === 0 ? "opacity-50 grayscale" : ""}`}
                       />
                     </div>
 
@@ -270,10 +267,12 @@ const Home = () => {
                       <div className="h-[25%] flex flex-col justify-start px-6 mt-3">
                         <div className="w-full bg-gray-200 rounded-full h-4">
                           <div
-                            className={`h-4 rounded-full ${teamHPs[monanimal.name] === 0 ? 'bg-gray-500' : 'bg-green-500'}`}
+                            className={`h-4 rounded-full ${
+                              teamHPs[monanimal.name] === 0 ? "bg-gray-500" : "bg-green-500"
+                            }`}
                             style={{
                               width: `${((teamHPs[monanimal.name] || 0) / 10000) * 100}%`,
-                              transition: 'width 0.5s ease-in-out',
+                              transition: "width 0.5s ease-in-out",
                             }}
                           ></div>
                         </div>
@@ -285,10 +284,11 @@ const Home = () => {
                         <button
                           onClick={handleHeal}
                           disabled={isLoading || teamHPs[monanimal.name] === 10000}
-                          className={`w-32 px-4 py-2 ${isLoading || teamHPs[monanimal.name] === 10000
-                            ? 'bg-gray-400'
-                            : 'bg-green-500 hover:bg-green-600'
-                            } text-white font-bold rounded transition-colors`}
+                          className={`w-32 px-4 py-2 ${
+                            isLoading || teamHPs[monanimal.name] === 10000
+                              ? "bg-gray-400"
+                              : "bg-green-500 hover:bg-green-600"
+                          } text-white font-bold rounded transition-colors`}
                         >
                           Heal
                         </button>
@@ -300,13 +300,13 @@ const Home = () => {
           )}
 
           {/* Other Teams Section */}
-          <div className="flex flex-nowrap justify-center min-w-fit" style={{ gap: "100px" }}>
+          <div className="flex flex-nowrap justify-center min-w-fit pb-8 px-4" style={{ gap: "100px" }}>
             {monanimals
               .filter(monanimal => monanimal.name !== playerTeam)
-              .map((monanimal) => (
+              .map(monanimal => (
                 <div
                   key={monanimal.name}
-                  className="bg-white/80 backdrop-blur-sm text-center rounded-3xl shadow-lg flex-shrink-0 flex flex-col transform transition-transform duration-300 hover:scale-105"
+                  className="bg-white/80 backdrop-blur-sm text-center rounded-3xl shadow-lg flex-shrink-0 flex flex-col transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
                   style={{
                     backgroundImage: "url('/images/carta_devnet.png')",
                     backgroundSize: "contain",
@@ -314,6 +314,7 @@ const Home = () => {
                     backgroundPosition: "center",
                     height: "408px",
                     width: "286px",
+                    transition: "all 0.3s ease-in-out",
                   }}
                 >
                   {/* Image Section */}
@@ -323,7 +324,7 @@ const Home = () => {
                       alt={monanimal.name}
                       width={120}
                       height={120}
-                      className={`mx-auto ${teamHPs[monanimal.name] === 0 ? 'opacity-50 grayscale' : ''}`}
+                      className={`mx-auto ${teamHPs[monanimal.name] === 0 ? "opacity-50 grayscale" : ""}`}
                     />
                   </div>
 
@@ -341,10 +342,12 @@ const Home = () => {
                     <div className="h-[25%] flex flex-col justify-start px-6 mt-3">
                       <div className="w-full bg-gray-200 rounded-full h-4">
                         <div
-                          className={`h-4 rounded-full ${teamHPs[monanimal.name] === 0 ? 'bg-gray-500' : 'bg-blue-500'}`}
+                          className={`h-4 rounded-full ${
+                            teamHPs[monanimal.name] === 0 ? "bg-gray-500" : "bg-blue-500"
+                          }`}
                           style={{
                             width: `${((teamHPs[monanimal.name] || 0) / 10000) * 100}%`,
-                            transition: 'width 0.5s ease-in-out',
+                            transition: "width 0.5s ease-in-out",
                           }}
                         ></div>
                       </div>
@@ -356,12 +359,13 @@ const Home = () => {
                       <button
                         onClick={() => handleAttack(monanimal.name)}
                         disabled={isLoading || !playerTeam || teamHPs[monanimal.name] === 0}
-                        className={`w-32 px-4 py-2 ${isLoading || !playerTeam || teamHPs[monanimal.name] === 0
-                          ? 'bg-gray-400'
-                          : 'bg-red-500 hover:bg-red-600'
-                          } text-white font-bold rounded transition-colors`}
+                        className={`w-32 px-4 py-2 ${
+                          isLoading || !playerTeam || teamHPs[monanimal.name] === 0
+                            ? "bg-gray-400"
+                            : "bg-red-500 hover:bg-red-600"
+                        } text-white font-bold rounded transition-colors`}
                       >
-                        {teamHPs[monanimal.name] === 0 ? 'Defeated' : 'Attack'}
+                        {teamHPs[monanimal.name] === 0 ? "Defeated" : "Attack"}
                       </button>
                     </div>
                   </div>
@@ -381,24 +385,19 @@ const Home = () => {
             >
               ×
             </button>
-            <h2 className="text-2xl font-bold mb-4">Great work Warrior!</h2>
-            <p className="mb-6">You're eligible to mint the legendary Monavara</p>
+            <h2 className="text-2xl font-bold mb-4">King Monavara&apos;s Decision</h2>
+            <p className="mb-6">You&apos;re eligible to mint the legendary Monavara</p>
             <div className="mb-6">
-              <Image
-                src="/images/Monavara-scooter.png"
-                alt="Legendary Monavara"
-                width={200}
-                height={200}
-                className="mx-auto"
-              />
+              <Image src="/images/Monavara.png" alt="Legendary Monavara" width={200} height={200} className="mx-auto" />
             </div>
             <button
               onClick={handleMint}
               disabled={isMinting}
-              className={`w-full py-3 px-6 rounded-lg text-white font-bold ${isMinting ? 'bg-gray-400' : 'bg-purple-600 hover:bg-purple-700'
-                }`}
+              className={`w-full py-3 px-6 rounded-lg text-white font-bold ${
+                isMinting ? "bg-gray-400" : "bg-purple-600 hover:bg-purple-700"
+              }`}
             >
-              {isMinting ? 'Minting...' : 'Mint Monavara NFT'}
+              {isMinting ? "Minting..." : "Mint Monavara NFT"}
             </button>
           </div>
         </div>
