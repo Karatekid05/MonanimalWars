@@ -15,38 +15,32 @@ export const monadDevnet = defineChain({
   nativeCurrency: { name: "Monad", symbol: "DMON", decimals: 18 },
   rpcUrls: {
     default: {
-      http: ["https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a"],
+      http: ["https://rpc.monad.xyz/monad"],
     },
     public: {
-      http: ["https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a"],
+      http: ["https://rpc.monad.xyz/monad"],
     },
   },
   blockExplorers: {
     default: {
-      name: "Monad Devnet Blockscout",
-      url: "https://explorer.monad-devnet.devnet101.com",
+      name: "Monad Explorer",
+      url: "https://explorer.monad.xyz",
     },
   },
 });
 
 const scaffoldConfig = {
   // The networks on which your DApp is live
-  targetNetworks: [monadDevnet], // Add monadDevnet to the list if you are targeting the monad devnet
+  targetNetworks: [monadDevnet],
 
   // The interval at which your front-end polls the RPC servers for new data
-  // it has no effect if you only target the local network (default is 4000)
   pollingInterval: 30000,
 
   // This is ours Alchemy's default API key.
   // You can get your own at https://dashboard.alchemyapi.io
-  // It's recommended to store it in an env variable:
-  // .env.local for local testing, and in the Vercel/system env config for live apps.
   alchemyApiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || "oKxs-03sij-U_N0iOlrSsZFr29-IqbuF",
 
   // This is ours WalletConnect's default project ID.
-  // You can get your own at https://cloud.walletconnect.com
-  // It's recommended to store it in an env variable:
-  // .env.local for local testing, and in the Vercel/system env config for live apps.
   walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "62afc991519fa07f009e934262bd06d4",
 
   // Only show the Burner Wallet when running on hardhat network

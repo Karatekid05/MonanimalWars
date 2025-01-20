@@ -225,7 +225,7 @@ export const Header = () => {
       {showUsernameModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
           <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
-            <button 
+            <button
               onClick={() => setShowUsernameModal(false)}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
             >
@@ -248,7 +248,13 @@ export const Header = () => {
 
       {showKingPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
+            <button
+              onClick={() => setShowKingPopup(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
             {!monanimalRevealed ? (
               <>
                 {!animationStarted ? (
