@@ -1,9 +1,9 @@
 {
     "version": 2,
+    "buildCommand": false,
+    "installCommand": false,
     "framework": "nextjs",
-    "buildCommand": "cd packages/nextjs && npm install --legacy-peer-deps && npm run build",
     "outputDirectory": "packages/nextjs/.next",
-    "installCommand": "cd packages/nextjs && npm install --legacy-peer-deps",
     "builds": [
         {
             "src": "packages/nextjs/package.json",
