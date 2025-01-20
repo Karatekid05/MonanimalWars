@@ -1,9 +1,9 @@
 {
     "version": 2,
     "framework": "nextjs",
-    "buildCommand": "cd packages/nextjs && npm install && npm run build",
+    "buildCommand": "cd packages/nextjs && npm install --legacy-peer-deps && npm run build",
     "outputDirectory": "packages/nextjs/.next",
-    "installCommand": "cd packages/nextjs && npm install",
+    "installCommand": "cd packages/nextjs && npm install --legacy-peer-deps",
     "env": {
         "NEXT_PUBLIC_MONAD_RPC_URL": "https://rpc.monad.xyz/monad",
         "NEXT_PUBLIC_MONAD_BLOCKSCOUT_URL": "https://explorer.monad.xyz",
