@@ -28,8 +28,8 @@ export const monadDevnet = defineChain({
     },
   },
   fees: {
-    defaultGasPrice: 1000000000n, // 1 gwei
-    defaultPriorityFee: 100000000n, // 0.1 gwei
+    defaultGasPrice: 100000000n, // 0.1 gwei
+    defaultPriorityFee: 10000000n, // 0.01 gwei
   },
 });
 

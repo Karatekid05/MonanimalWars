@@ -12,6 +12,9 @@ export const wagmiConfig = createConfig({
                     'Content-Type': 'application/json',
                 },
             },
+            retryCount: 3,
+            retryDelay: 1000,
+            timeout: 20000,
         }),
     },
 }); 
