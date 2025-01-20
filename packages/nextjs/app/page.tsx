@@ -32,6 +32,7 @@ const Home = () => {
       { name: "Chog", image: "/images/Chog1.png" },
       { name: "Salmonad", image: "/images/Salmonad1.png" },
       { name: "Mouch", image: "/images/mosca.png" },
+      { name: "Molandak", image: "/images/Molandak.png" },
     ],
     [],
   );
@@ -247,8 +248,8 @@ const Home = () => {
                       <Image
                         src={teamHPs[monanimal.name] > 0 ? monanimal.image : `/images/${monanimal.name}_defeated.png`}
                         alt={monanimal.name}
-                        width={120}
-                        height={120}
+                        width={monanimal.name === "Molandak" ? 180 : 120}
+                        height={monanimal.name === "Molandak" ? 180 : 120}
                         className={`mx-auto ${teamHPs[monanimal.name] === 0 ? "opacity-50 grayscale" : ""}`}
                       />
                     </div>
@@ -322,8 +323,8 @@ const Home = () => {
                     <Image
                       src={teamHPs[monanimal.name] > 0 ? monanimal.image : `/images/${monanimal.name}_defeated.png`}
                       alt={monanimal.name}
-                      width={120}
-                      height={120}
+                      width={monanimal.name === "Molandak" ? 180 : 120}
+                      height={monanimal.name === "Molandak" ? 180 : 120}
                       className={`mx-auto ${teamHPs[monanimal.name] === 0 ? "opacity-50 grayscale" : ""}`}
                     />
                   </div>

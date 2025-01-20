@@ -60,7 +60,7 @@ contract MonanimalWars is Ownable(msg.sender) {
     event PlayerReassigned(address player, string oldTeam, string newTeam);
 
     // Array com os nomes das equipas disponíveis
-    string[] private teamNames = ["Moyaki", "Mopo", "Chog", "Salmonad", "Mouch"];
+    string[] private teamNames = ["Moyaki", "Mopo", "Chog", "Salmonad", "Mouch", "Molandak"];
 
     // Add NFT-related state variables
     address public monavaraNFT;

@@ -152,7 +152,7 @@ const deployedContracts = {
       deploymentScript: "Deploy.s.sol",
     },
     MonanimalWars: {
-      address: "0xa56f946d6398dd7d9d4d9b337cf9e0f68982ca5b",
+      address: "0x67ad6ea566ba6b0fc52e97bc25ce46120fdac04c",
       abi: [
         {
           type: "constructor",
@@ -975,11 +975,11 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1737327972.json",
+      deploymentFile: "run-1737332581.json",
       deploymentScript: "Deploy.s.sol",
     },
     MonavaraNFT: {
-      address: "0x5d42ebdbba61412295d7b0302d6f50ac449ddb4f",
+      address: "0x114e375b6fcc6d6fcb68c7a1d407e652c54f25fb",
       abi: [
         {
           type: "constructor",
@@ -1591,7 +1591,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1737327972.json",
+      deploymentFile: "run-1737332581.json",
       deploymentScript: "Deploy.s.sol",
     },
   },

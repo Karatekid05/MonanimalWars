@@ -13,6 +13,7 @@ const monanimals = [
   { name: "Chog", image: "/images/Chog1.png" },
   { name: "Salmonad", image: "/images/Salmonad1.png" },
   { name: "Mouch", image: "/images/mosca.png" },
+  { name: "Molandak", image: "/images/Molandak.png" },
 ];
 
 export const Header = () => {
