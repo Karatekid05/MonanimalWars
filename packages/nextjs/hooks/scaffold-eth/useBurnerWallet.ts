@@ -16,11 +16,6 @@ const isValidSk = (pk: Hex | string | undefined | null): boolean => {
 };
 
 /**
- * If no burner is found in localstorage, we will generate a random private key
- */
-const newDefaultPrivateKey = generatePrivateKey();
-
-/**
  * Save the current burner private key to local storage
  */
 export const saveBurnerSK = (privateKey: Hex): void => {
@@ -29,29 +24,10 @@ export const saveBurnerSK = (privateKey: Hex): void => {
   }
 };
 
-/**
- * Gets the current burner private key from local storage
- */
-export const loadBurnerSK = (): Hex => {
-  let currentSk: Hex = "0x";
-  if (typeof window != "undefined" && window != null) {
-    currentSk = (window?.localStorage?.getItem?.(burnerStorageKey)?.replaceAll('"', "") ?? "0x") as Hex;
-  }
-
-  if (!!currentSk && isValidSk(currentSk)) {
-    return currentSk;
-  } else {
-    saveBurnerSK(newDefaultPrivateKey);
-    return newDefaultPrivateKey;
-  }
-};
-
 type BurnerAccount = {
   walletClient: WalletClient | undefined;
   account: PrivateKeyAccount | undefined;
-  // creates a new burner account
   generateNewBurner: () => void;
-  // explicitly save burner to storage
   saveBurner: () => void;
 };
 
@@ -59,7 +35,7 @@ type BurnerAccount = {
  * Creates a burner wallet
  */
 export const useBurnerWallet = (): BurnerAccount => {
-  const [burnerSk, setBurnerSk] = useLocalStorage<Hex>(burnerStorageKey, newDefaultPrivateKey, {
+  const [burnerSk, setBurnerSk] = useLocalStorage<Hex | null>(burnerStorageKey, null, {
     initializeWithValue: false,
   });
 
@@ -71,7 +47,9 @@ export const useBurnerWallet = (): BurnerAccount => {
   const isCreatingNewBurnerRef = useRef(false);
 
   const saveBurner = useCallback(() => {
-    setBurnerSk(generatedPrivateKey);
+    if (generatedPrivateKey !== "0x") {
+      setBurnerSk(generatedPrivateKey);
+    }
   }, [setBurnerSk, generatedPrivateKey]);
 
   const generateNewBurner = useCallback(() => {
@@ -104,10 +82,6 @@ export const useBurnerWallet = (): BurnerAccount => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publicClient?.chain.id]);
 
-  /**
-   * Load wallet with burnerSk
-   * connect and set wallet, once we have burnerSk and valid provider
-   */
   useEffect(() => {
     if (burnerSk && publicClient?.chain.id) {
       let wallet: WalletClient<HttpTransport, Chain, PrivateKeyAccount> | undefined = undefined;
@@ -122,18 +96,13 @@ export const useBurnerWallet = (): BurnerAccount => {
 
         setGeneratedPrivateKey(burnerSk);
         setAccount(randomAccount);
-      } else {
-        wallet = generateNewBurner();
       }
 
-      if (wallet == null) {
-        throw "Error:  Could not create burner wallet";
+      if (wallet) {
+        setWalletClient(wallet);
+        saveBurner();
       }
-
-      setWalletClient(wallet);
-      saveBurner();
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [burnerSk, publicClient?.chain.id]);
 
