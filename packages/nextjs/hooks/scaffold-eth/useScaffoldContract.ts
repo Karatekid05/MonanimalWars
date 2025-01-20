@@ -26,18 +26,24 @@ export const useScaffoldContract = <
   const { targetNetwork } = useTargetNetwork();
   const publicClient = usePublicClient({ chainId: targetNetwork.id });
 
-  let contract = undefined;
-  if (deployedContractData) {
-    contract = getContract({
-      address: deployedContractData.address,
-      abi: deployedContractData.abi,
-      walletClient: walletClient as any,
-      publicClient,
-      gas: 1000000n, // Set a reasonable gas limit
-    });
+  if (!deployedContractData) {
+    return { data: undefined };
   }
 
+  const contract = getContract({
+    address: deployedContractData.address,
+    abi: deployedContractData.abi,
+    walletClient: walletClient as any,
+    publicClient,
+  });
+
   return {
-    data: contract,
+    data: {
+      ...contract,
+      address: deployedContractData.address,
+      abi: deployedContractData.abi,
+      read: contract,
+      write: contract,
+    },
   };
 };
