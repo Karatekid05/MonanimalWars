@@ -2,6 +2,7 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
   typescript: {
     ignoreBuildErrors: true
   },
@@ -11,23 +12,14 @@ const nextConfig = {
   experimental: {
     externalDir: true
   },
-  env: {
-    NEXT_PUBLIC_MONAD_RPC_URL: process.env.NEXT_PUBLIC_MONAD_RPC_URL,
-    NEXT_PUBLIC_MONAD_BLOCKSCOUT_URL: process.env.NEXT_PUBLIC_MONAD_BLOCKSCOUT_URL,
-    NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
-  },
-  headers: async () => {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https: wss: metamask-inpage: chrome-extension:; connect-src 'self' https: wss: data:; frame-src 'self' https: chrome-extension:; frame-ancestors 'none';"
-          }
-        ],
-      },
-    ]
+  webpack: (config) => {
+    config.resolve.fallback = {
+      fs: false,
+      net: false,
+      tls: false,
+      encoding: false
+    };
+    return config;
   }
 };
 

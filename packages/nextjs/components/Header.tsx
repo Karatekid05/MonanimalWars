@@ -340,9 +340,8 @@ export const Header = () => {
                   {leaderboard.map((player, index) => (
                     <tr
                       key={player.playerAddress}
-                      className={`${
-                        player.playerAddress === address ? "bg-purple-100" : index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      }`}
+                      className={`${player.playerAddress === address ? "bg-purple-100" : index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                        }`}
                     >
                       <td className="py-2 px-4">{index + 1}</td>
                       <td className="py-2 px-4">{player.username}</td>
