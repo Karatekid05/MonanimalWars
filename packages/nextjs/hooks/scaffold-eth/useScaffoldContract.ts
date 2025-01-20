@@ -1,6 +1,6 @@
+import { usePublicClient } from "wagmi";
 import { useTargetNetwork } from "./useTargetNetwork";
 import { Account, Address, Chain, Client, Transport, getContract } from "viem";
-import { usePublicClient } from "wagmi";
 import { GetWalletClientReturnType } from "wagmi/actions";
 import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
@@ -14,44 +14,30 @@ import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
  */
 export const useScaffoldContract = <
   TContractName extends ContractName,
-  TWalletClient extends Exclude<GetWalletClientReturnType, null> | undefined,
+  TWalletClient extends GetWalletClientReturnType | null = GetWalletClientReturnType | null,
 >({
   contractName,
   walletClient,
 }: {
   contractName: TContractName;
-  walletClient?: TWalletClient | null;
+  walletClient: TWalletClient;
 }) => {
-  const { data: deployedContractData, isLoading: deployedContractLoading } = useDeployedContractInfo(contractName);
+  const { data: deployedContractData } = useDeployedContractInfo(contractName);
   const { targetNetwork } = useTargetNetwork();
   const publicClient = usePublicClient({ chainId: targetNetwork.id });
 
   let contract = undefined;
-  if (deployedContractData && publicClient) {
-    contract = getContract<
-      Transport,
-      Address,
-      Contract<TContractName>["abi"],
-      TWalletClient extends Exclude<GetWalletClientReturnType, null>
-        ? {
-            public: Client<Transport, Chain>;
-            wallet: TWalletClient;
-          }
-        : { public: Client<Transport, Chain> },
-      Chain,
-      Account
-    >({
+  if (deployedContractData) {
+    contract = getContract({
       address: deployedContractData.address,
-      abi: deployedContractData.abi as Contract<TContractName>["abi"],
-      client: {
-        public: publicClient,
-        wallet: walletClient ? walletClient : undefined,
-      } as any,
+      abi: deployedContractData.abi,
+      walletClient: walletClient as any,
+      publicClient,
+      gas: 1000000n, // Set a reasonable gas limit
     });
   }
 
   return {
     data: contract,
-    isLoading: deployedContractLoading,
   };
 };

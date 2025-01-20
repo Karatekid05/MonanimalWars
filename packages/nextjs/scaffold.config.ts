@@ -27,6 +27,10 @@ export const monadDevnet = defineChain({
       url: "https://explorer.monad.xyz",
     },
   },
+  fees: {
+    defaultGasPrice: 1000000000n, // 1 gwei
+    defaultPriorityFee: 100000000n, // 0.1 gwei
+  },
 });
 
 const scaffoldConfig = {
