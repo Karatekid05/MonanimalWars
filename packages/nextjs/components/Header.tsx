@@ -224,7 +224,15 @@ export const Header = () => {
       {/* Modal de Username */}
       {showUsernameModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
+            {/* Close Button (X) */}
+            <button
+              onClick={() => setShowUsernameModal(false)}
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+              aria-label="Close"
+            >
+              &times; {/* This is the X character */}
+            </button>
             <h2 className="text-xl font-bold mb-4">Choose Your Username</h2>
             <input
               type="text"
