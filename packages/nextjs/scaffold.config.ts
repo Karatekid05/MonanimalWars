@@ -1,5 +1,6 @@
 import { defineChain } from "viem";
 import * as chains from "viem/chains";
+import * as wagmiChains from "wagmi/chains";
 
 export type ScaffoldConfig = {
   targetNetworks: readonly chains.Chain[];
@@ -7,6 +8,7 @@ export type ScaffoldConfig = {
   alchemyApiKey: string;
   walletConnectProjectId: string;
   onlyLocalBurnerWallet: boolean;
+  walletAutoConnect: boolean;
 };
 
 export const monadDevnet = defineChain({
@@ -51,6 +53,62 @@ const scaffoldConfig = {
 
   // Only show the Burner Wallet when running on hardhat network
   onlyLocalBurnerWallet: true,
+
+  // Set this to false to disable the wallet auto-connect
+  // More info: https://wagmi.sh/react/hooks/useAutoConnect
+  walletAutoConnect: true,
 } as const satisfies ScaffoldConfig;
+
+export const contracts = {
+  20143: {  // Monad Devnet
+    MonanimalWars: {
+      address: "0xc1e0a9db9ea830c52603798481045688c8ae99c2",
+      abi: [/* ... existing ABI ... */],
+    },
+    NadNameService: {
+      address: "0x3019BF1dfB84E5b46Ca9D0eEC37dE08a59A41308",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "addr",
+              type: "address",
+            },
+          ],
+          name: "getPrimaryNameForAddress",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "node",
+              type: "bytes32",
+            },
+          ],
+          name: "getResolvedAddress",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        }
+      ],
+    },
+  },
+} as const;
 
 export default scaffoldConfig;

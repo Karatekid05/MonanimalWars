@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useScaffoldContract } from "~~/hooks/scaffold-eth";
+import { useNadName } from "~~/hooks/useNadName";
 
 const monanimals = [
   { name: "Moyaki", image: "/images/Moyaki.png" },
@@ -31,8 +32,11 @@ export const Header = () => {
   } | null>(null);
 
   const [username, setUsername] = useState("");
+  const [usernameType, setUsernameType] = useState<"custom" | "nad">("custom");
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
@@ -50,6 +54,11 @@ export const Header = () => {
       damageDealt: number;
     }>
   >([]);
+
+  const { verifyNadName } = useNadName();
+
+  const [nadName, setNadName] = useState<string | null>(null);
+  const [showNadConfirmation, setShowNadConfirmation] = useState(false);
 
   // Add function to fetch leaderboard
   const fetchLeaderboard = async () => {
@@ -75,19 +84,24 @@ export const Header = () => {
     setShowLeaderboard(true);
   };
 
-  // Verificar se o usuário está registrado
+  // Verificar se o usuário está registrado e sua equipe
   useEffect(() => {
     const checkRegistration = async () => {
       if (monWarsContract && address) {
         try {
           const player = await monWarsContract.read.getPlayer([address]);
           setIsRegistered(player.isRegistered);
+
           if (player.isRegistered) {
             setUsername(player.username);
+
+            // Verificar equipe
             if (player.teamId > 0) {
               const teamName = await monWarsContract.read.getTeamName([address]);
+              console.log("Player team:", teamName);
               const team = monanimals.find(m => m.name === teamName);
               if (team) {
+                console.log("Setting team:", team.name);
                 setSelectedMonanimal(team);
               }
             }
@@ -101,38 +115,57 @@ export const Header = () => {
     checkRegistration();
   }, [monWarsContract, address]);
 
-  // Registrar username
+  // Update the registration handler
   const handleRegisterUsername = async () => {
     if (!monWarsContract || !publicClient) {
-      alert("Please connect your wallet first");
+      setErrorMessage("Please connect your wallet first");
       return;
     }
 
-    if (username.trim()) {
-      try {
-        const hash = await monWarsContract.write.registerPlayer([username.trim()]);
-        console.log("Waiting for transaction confirmation...");
+    if (!username.trim()) {
+      setErrorMessage("Please enter a username");
+      return;
+    }
 
-        const receipt = await publicClient.waitForTransactionReceipt({ hash });
-        console.log("Registration successful", receipt);
+    setIsRegistering(true);
+    setErrorMessage(null);
 
-        // Update the registration status and username after successful transaction
-        const player = await monWarsContract.read.getPlayer([address as string]);
-        setIsRegistered(player.isRegistered);
-        setUsername(player.username);
-        setShowUsernameModal(false);
-      } catch (error: any) {
-        console.error("Detailed error:", error);
-        if (error.message.includes("Username already taken")) {
-          alert("This username is already taken. Please try another one.");
-        } else if (error.message.includes("Player already registered")) {
-          alert("You are already registered. Please refresh the page.");
-        } else {
-          alert("Error registering username. Please try again.");
+    try {
+      let finalUsername = username.trim();
+
+      if (usernameType === "nad") {
+        // Verify if the address has a .nad name
+        const nadName = await verifyNadName(address as string);
+        if (!nadName) {
+          setErrorMessage("You don't have any .nad name registered");
+          setIsRegistering(false);
+          return;
         }
+        finalUsername = nadName;
       }
-    } else {
-      alert("Please enter a username");
+
+      const tx = await monWarsContract.write.registerPlayer([finalUsername]);
+      console.log("Waiting for transaction confirmation...");
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+      console.log("Registration successful", receipt);
+
+      const player = await monWarsContract.read.getPlayer([address as string]);
+      setIsRegistered(player.isRegistered);
+      setUsername(player.username);
+      setShowUsernameModal(false);
+      setErrorMessage(null);
+    } catch (error: any) {
+      console.error("Detailed error:", error);
+      if (error.message.includes("Username already taken")) {
+        setErrorMessage("This username is already taken. Please try another one.");
+      } else if (error.message.includes("Player already registered")) {
+        setErrorMessage("You are already registered. Please refresh the page.");
+      } else {
+        setErrorMessage("Error registering username. Please try again.");
+      }
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -176,6 +209,50 @@ export const Header = () => {
     setShowKingPopup(false);
   };
 
+  // Add function to check for .nad name when modal opens
+  const handleOpenUsernameModal = async () => {
+    console.log("Opening username modal");
+    console.log("Current address:", address);
+
+    setShowUsernameModal(true);
+    setShowNadConfirmation(false);
+    setNadName(null);
+    setErrorMessage(null);
+
+    if (address) {
+      try {
+        console.log("Checking for .nad name...");
+        const existingNadName = await verifyNadName(address);
+        console.log("Existing .nad name result:", existingNadName);
+
+        if (existingNadName) {
+          console.log("Setting .nad name:", existingNadName);
+          setNadName(existingNadName);
+          setShowNadConfirmation(true);
+        } else {
+          console.log("No .nad name found, showing regular input");
+          setShowNadConfirmation(false);
+        }
+      } catch (error) {
+        console.error("Error checking .nad name:", error);
+        setShowNadConfirmation(false);
+      }
+    } else {
+      console.log("No address connected");
+    }
+  };
+
+  // Add function to handle .nad name confirmation
+  const handleNadNameConfirmation = (useNadName: boolean) => {
+    if (useNadName && nadName) {
+      setUsername(nadName);
+      setUsernameType("nad");
+    } else {
+      setUsernameType("custom");
+    }
+    setShowNadConfirmation(false);
+  };
+
   return (
     <div className="sticky top-0 navbar bg-base-200 min-h-0 flex-shrink-0 justify-between z-20 border-b-2 border-base-100 px-4 py-4">
       <div className="navbar-start flex gap-4 items-center">
@@ -201,49 +278,84 @@ export const Header = () => {
 
       <div className="navbar-end flex gap-4">
         {!isRegistered ? (
-          <button onClick={() => setShowUsernameModal(true)} className="btn btn-primary">
+          <button onClick={handleOpenUsernameModal} className="btn btn-primary">
             Register Username
           </button>
+        ) : selectedMonanimal ? (
+          <div className="flex items-center gap-2">
+            <div className="font-bold text-lg text-purple-500">Team {selectedMonanimal.name}</div>
+          </div>
         ) : (
-          <div className="font-bold text-lg">{username}</div>
+          <button
+            onClick={selectRandomMonanimal}
+            className="btn btn-accent text-white font-bold px-4 py-2 rounded-md hover:bg-accent-focus"
+          >
+            Select Monanimal
+          </button>
         )}
-        {isRegistered &&
-          (selectedMonanimal ? (
-            <div className="font-bold text-lg text-purple-500">Team: {selectedMonanimal.name}</div>
-          ) : (
-            <button
-              onClick={selectRandomMonanimal}
-              className="btn btn-accent text-white font-bold px-4 py-2 rounded-md hover:bg-accent-focus"
-            >
-              Select Monanimal
-            </button>
-          ))}
         <RainbowKitCustomConnectButton />
       </div>
 
-      {/* Modal de Username */}
+      {/* Username Modal */}
       {showUsernameModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
           <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
-            {/* Close Button (X) */}
             <button
               onClick={() => setShowUsernameModal(false)}
               className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
               aria-label="Close"
             >
-              &times; {/* This is the X character */}
+              &times;
             </button>
-            <h2 className="text-xl font-bold mb-4">Choose Your Username</h2>
-            <input
-              type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              className="w-full p-2 border border-gray-300 rounded mb-4"
-            />
-            <button onClick={handleRegisterUsername} className="btn btn-primary w-full">
-              Confirm
-            </button>
+
+            {showNadConfirmation ? (
+              // .nad Name Confirmation Dialog
+              <>
+                <h2 className="text-xl font-bold mb-4">We noticed you have a .nad name!</h2>
+                <p className="text-lg mb-4">Would you like to use <span className="font-bold">{nadName}</span> as your username?</p>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => handleNadNameConfirmation(true)}
+                    className="flex-1 btn btn-primary"
+                  >
+                    Yes, use my .nad name
+                  </button>
+                  <button
+                    onClick={() => handleNadNameConfirmation(false)}
+                    className="flex-1 btn btn-secondary"
+                  >
+                    No, use custom username
+                  </button>
+                </div>
+              </>
+            ) : (
+              // Regular Username Input
+              <>
+                <h2 className="text-xl font-bold mb-4">Choose Your Username</h2>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className="w-full p-2 border border-gray-300 rounded mb-2"
+                  />
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Choose a unique username for the game
+                </p>
+                {errorMessage && (
+                  <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
+                )}
+                <button
+                  onClick={handleRegisterUsername}
+                  className="btn btn-primary w-full"
+                  disabled={isRegistering}
+                >
+                  {isRegistering ? "Registering..." : "Confirm"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -336,9 +448,8 @@ export const Header = () => {
                   {leaderboard.map((player, index) => (
                     <tr
                       key={player.playerAddress}
-                      className={`${
-                        player.playerAddress === address ? "bg-purple-100" : index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      }`}
+                      className={`${player.playerAddress === address ? "bg-purple-100" : index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                        }`}
                     >
                       <td className="py-2 px-4">{index + 1}</td>
                       <td className="py-2 px-4">{player.username}</td>
