@@ -15,14 +15,14 @@ export const Footer = () => {
   const isLocalNetwork = targetNetwork.id === hardhat.id;
 
   return (
-    <div className="min-h-0 py-5 px-1 mb-11 lg:mb-0">
+    <div className="min-h-0 py-3 px-1 mb-11 lg:mb-0 bg-gradient-to-r from-[#2A2A2A] to-[#1A1A1A] border-t border-[#FECA7E]/20">
       {/* Essential Features */}
       <div>
         <div className="fixed flex justify-between items-center w-full z-10 p-4 bottom-0 left-0 pointer-events-none">
           <div className="flex flex-col md:flex-row gap-2 pointer-events-auto">
             {nativeCurrencyPrice > 0 && (
               <div>
-                <div className="btn btn-primary btn-sm font-normal gap-1 cursor-auto">
+                <div className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold transition-all duration-200">
                   <span>${nativeCurrencyPrice.toFixed(2)}</span>
                 </div>
               </div>
@@ -30,7 +30,7 @@ export const Footer = () => {
             {isLocalNetwork && (
               <>
                 <Faucet />
-                <Link href="/blockexplorer" passHref className="btn btn-primary btn-sm font-normal gap-1">
+                <Link href="/blockexplorer" passHref className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold transition-all duration-200">
                   <span>Block Explorer</span>
                 </Link>
               </>
@@ -40,23 +40,29 @@ export const Footer = () => {
       </div>
 
       {/* Centralized Content */}
-      <div className="flex flex-col justify-center items-center w-full text-center mt-10">
-        <p className="text-lg font-medium">
+      <div className="flex flex-col justify-center items-center w-full text-center mt-4">
+        <p className="text-lg font-medium text-[#FECA7E]">
           Built by{" "}
-          <a href="https://x.com/monadicoo" target="_blank" rel="noreferrer" className="link">
+          <a href="https://x.com/monadicoo" target="_blank" rel="noreferrer" className="hover:text-[#FED99E] transition-colors">
             Ravel
           </a>
           ,{" "}
-          <a href="https://x.com/dgrua50" target="_blank" rel="noreferrer" className="link">
+          <a href="https://x.com/dgrua50" target="_blank" rel="noreferrer" className="hover:text-[#FED99E] transition-colors">
             KarateKid
           </a>
           , and{" "}
-          <a href="https://x.com/MarKript0" target="_blank" rel="noreferrer" className="link">
+          <a href="https://x.com/MarKript0" target="_blank" rel="noreferrer" className="hover:text-[#FED99E] transition-colors">
             MarKrypto
           </a>
         </p>
-        <div className="mt-4">
-          <Image src="/images/Escudo1.png" alt="Monad Logo" width={100} height={100} className="w-24 h-24" />
+        <div className="mt-2">
+          <Image
+            src="/images/Escudo1.png"
+            alt="Monad Logo"
+            width={150}
+            height={150}
+            className="w-32 h-32 opacity-90 hover:opacity-100 transition-opacity"
+          />
         </div>
       </div>
     </div>

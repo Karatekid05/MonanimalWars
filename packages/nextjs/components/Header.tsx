@@ -60,6 +60,24 @@ export const Header = () => {
   const [nadName, setNadName] = useState<string | null>(null);
   const [showNadConfirmation, setShowNadConfirmation] = useState(false);
 
+  const [showRules, setShowRules] = useState(false);
+
+  // Reset states when wallet disconnects
+  useEffect(() => {
+    if (!address) {
+      setSelectedMonanimal(null);
+      setShowKingPopup(false);
+      setMonanimalRevealed(null);
+      setUsername("");
+      setShowUsernameModal(false);
+      setIsRegistered(false);
+      setIsRegistering(false);
+      setErrorMessage(null);
+      setNadName(null);
+      setShowNadConfirmation(false);
+    }
+  }, [address]);
+
   // Add function to fetch leaderboard
   const fetchLeaderboard = async () => {
     if (monWarsContract) {
@@ -254,45 +272,57 @@ export const Header = () => {
   };
 
   return (
-    <div className="sticky top-0 navbar bg-base-200 min-h-0 flex-shrink-0 justify-between z-20 border-b-2 border-base-100 px-4 py-4">
-      <div className="navbar-start flex gap-4 items-center">
+    <div className="sticky lg:static top-0 navbar bg-gradient-to-r from-[#2A2A2A] to-[#1A1A1A] min-h-0 flex-shrink-0 justify-between z-20 px-0 sm:px-2 border-b border-[#FECA7E]/20">
+      <div className="navbar-start w-auto lg:w-1/2">
         <Link href="/" className="hover:opacity-75 transition-opacity">
           <Image src="/images/placa.png" alt="Monanimal Wars Logo" width={80} height={28} className="object-contain" />
         </Link>
         <button
           onClick={handleShowLeaderboard}
-          className="btn btn-primary text-white font-bold px-4 py-2 rounded-md hover:bg-primary-focus"
+          className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold px-4 py-2 rounded-md transition-all duration-200"
         >
           Show Leaderboard
         </button>
-        <Link href="/statistics" className="btn btn-info text-white font-bold px-4 py-2 rounded-md hover:bg-info-focus">
+        <Link
+          href="/statistics"
+          className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold px-4 py-2 rounded-md transition-all duration-200 ml-2"
+        >
           Statistics
         </Link>
         <Link
           href="/team"
-          className="btn btn-secondary text-white font-bold px-4 py-2 rounded-md hover:bg-secondary-focus"
+          className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold px-4 py-2 rounded-md transition-all duration-200 ml-2"
         >
           Meet the Team
         </Link>
       </div>
 
-      <div className="navbar-end flex gap-4">
-        {!isRegistered ? (
-          <button onClick={handleOpenUsernameModal} className="btn btn-primary">
+      <div className="navbar-end flex-grow mr-4 flex items-center gap-4">
+        {address && !isRegistered ? (
+          <button
+            onClick={handleOpenUsernameModal}
+            className="btn bg-[#FECA7E] text-black hover:bg-[#FED99E] border-none font-bold"
+          >
             Register Username
           </button>
         ) : selectedMonanimal ? (
           <div className="flex items-center gap-2">
-            <div className="font-bold text-lg text-purple-500">Team {selectedMonanimal.name}</div>
+            <div className="font-bold text-lg text-[#FECA7E]">Team {selectedMonanimal.name}</div>
           </div>
-        ) : (
+        ) : address ? (
           <button
             onClick={selectRandomMonanimal}
-            className="btn btn-accent text-white font-bold px-4 py-2 rounded-md hover:bg-accent-focus"
+            className="btn bg-[#FECA7E] text-black hover:bg-[#FED99E] border-none font-bold px-4 py-2 rounded-md"
           >
             Select Monanimal
           </button>
-        )}
+        ) : null}
+        <button
+          className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold transition-all duration-200"
+          onClick={() => setShowRules(true)}
+        >
+          Rules
+        </button>
         <RainbowKitCustomConnectButton />
       </div>
 
@@ -367,17 +397,17 @@ export const Header = () => {
               <>
                 {!animationStarted ? (
                   <>
-                    <h2 className="text-2xl font-bold mb-4 text-center">King Monavara&apos;s Decision</h2>
+                    <h2 className="text-2xl font-bold mb-4 text-center">Wizard Monavara&apos;s Decision</h2>
                     <div className="flex flex-col items-center">
                       <Image
                         src="/images/Monavara-scooter.png"
-                        alt="King Monavara"
+                        alt="Wizard Monavara"
                         width={128}
                         height={128}
                         className="mb-4"
                       />
                       <p className="text-center text-lg font-bold mb-2">
-                        Now King Monavara will decide your path on the battlefield.
+                        Now Wizard Monavara will decide your path on the battlefield.
                       </p>
                       <p className="text-center text-sm mb-4">Fight with honor and seek glory!</p>
                       <button
@@ -458,6 +488,45 @@ export const Header = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rules Popup */}
+      {showRules && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+          <div className="bg-gradient-to-b from-[#2A2A2A] to-[#1A1A1A] rounded-xl p-8 max-w-2xl w-full text-center relative shadow-[0_0_30px_rgba(254,202,126,0.3)] border border-[#FECA7E]/20">
+            <button
+              onClick={() => setShowRules(false)}
+              className="absolute top-4 right-4 text-xl font-bold text-[#FECA7E] hover:text-[#FED99E]"
+            >
+              ×
+            </button>
+            <h2 className="text-4xl mb-8" style={{ fontFamily: "'The Centurion', serif", color: '#FECA7E', fontSize: '3.5rem', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Game Rules</h2>
+
+            <div className="text-left space-y-4 text-white">
+              <h3 className="text-xl font-bold text-[#FECA7E]">Getting Started</h3>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Connect your wallet to start playing</li>
+                <li>Choose a username or use your .nad name</li>
+                <li>You'll be randomly assigned to one of six Monanimal teams</li>
+              </ul>
+
+              <h3 className="text-xl font-bold text-[#FECA7E] mt-6">Gameplay</h3>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Each team starts with 10,000 HP</li>
+                <li>Attack other teams to reduce their HP</li>
+                <li>Heal your team to restore HP</li>
+                <li>Teams with 0 HP are marked as defeated</li>
+              </ul>
+
+              <h3 className="text-xl font-bold text-[#FECA7E] mt-6">Special Rewards 🎁</h3>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Keep an eye on your total damage dealt...</li>
+                <li>A legendary surprise awaits brave warriors!</li>
+                <li><span className="text-sm italic">(Hint: The King might notice your valor after 10 attacks or 1,000 damage)</span></li>
+              </ul>
             </div>
           </div>
         </div>
