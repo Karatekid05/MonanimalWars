@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
@@ -40,11 +40,41 @@ export const Header = () => {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+  const [isMinting, setIsMinting] = useState(false);
 
   const { data: monWarsContract } = useScaffoldContract({
     contractName: "MonanimalWars",
     walletClient,
   });
+
+  const { data: monavaraNFTContract } = useScaffoldContract({
+    contractName: "MonavaraNFT",
+    walletClient,
+  });
+
+  const [hasShownEligibilityPopup, setHasShownEligibilityPopup] = useState(false);
+
+  const handleMint = async () => {
+    if (!monWarsContract || !publicClient || !address) return;
+
+    setIsMinting(true);
+    try {
+      const hash = await monWarsContract.write.mintMonavaraNFT();
+      console.log("Waiting for mint confirmation...");
+      await publicClient.waitForTransactionReceipt({ hash });
+
+      setShowMintPopup(false);
+      setHasMintedNFT(true);
+      setIsEligibleForNFT(false);
+      setShowEligibilityPopup(false);
+      alert("Congratulations! You've minted your Legendary Monavara NFT!");
+    } catch (error: any) {
+      console.error("Error minting NFT:", error);
+      alert(error.message || "Error minting NFT");
+    } finally {
+      setIsMinting(false);
+    }
+  };
 
   // Add leaderboard state
   const [leaderboard, setLeaderboard] = useState<
@@ -61,6 +91,14 @@ export const Header = () => {
   const [showNadConfirmation, setShowNadConfirmation] = useState(false);
 
   const [showRules, setShowRules] = useState(false);
+
+  const [showVideo, setShowVideo] = useState(false);
+  const [hasMintedNFT, setHasMintedNFT] = useState(false);
+  const [isEligibleForNFT, setIsEligibleForNFT] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const [showEligibilityPopup, setShowEligibilityPopup] = useState(false);
+  const [showMintPopup, setShowMintPopup] = useState(false);
 
   // Reset states when wallet disconnects
   useEffect(() => {
@@ -271,6 +309,84 @@ export const Header = () => {
     setShowNadConfirmation(false);
   };
 
+  // Check NFT eligibility and ownership
+  const checkNFTStatus = async () => {
+    if (monWarsContract && monavaraNFTContract && address) {
+      try {
+        // First check if player has already minted by checking NFT balance
+        const nftBalance = await monavaraNFTContract.read.balanceOf([address]);
+        const hasMinted = nftBalance > 0;
+
+        if (hasMinted) {
+          setHasMintedNFT(true);
+          setIsEligibleForNFT(false);
+          setShowEligibilityPopup(false);
+          return;
+        }
+
+        // If not minted, check eligibility and actions
+        const isEligible = await monWarsContract.read.isEligibleForNFT([address]);
+        const player = await monWarsContract.read.getPlayer([address]);
+        const hasEnoughActions = player.attackCount >= 10 || player.totalDamageDealt >= 1000;
+
+        // Update states
+        setHasMintedNFT(false);
+        setIsEligibleForNFT(isEligible && hasEnoughActions);
+
+        // Only show popup if:
+        // 1. Player has enough actions
+        // 2. Player is eligible
+        // 3. Player hasn't seen popup this session
+        // 4. Player definitely hasn't minted
+        if (hasEnoughActions && isEligible && !hasShownEligibilityPopup && !hasMinted) {
+          setShowEligibilityPopup(true);
+          setHasShownEligibilityPopup(true);
+        }
+      } catch (error) {
+        console.error("Error checking NFT status:", error);
+        setShowEligibilityPopup(false);
+      }
+    }
+  };
+
+  // Initial check and after each transaction
+  useEffect(() => {
+    checkNFTStatus();
+  }, [monWarsContract, monavaraNFTContract, address]);
+
+  // Add listeners for contract events to trigger eligibility check
+  useEffect(() => {
+    if (monWarsContract && publicClient) {
+      // Listen for attacks and damage updates
+      const unwatchAttack = publicClient.watchContractEvent({
+        address: monWarsContract.address,
+        abi: monWarsContract.abi,
+        eventName: 'TeamAttacked',
+        onLogs: () => {
+          // Reset hasShownEligibilityPopup when a new attack happens
+          setHasShownEligibilityPopup(false);
+          checkNFTStatus();
+        },
+      });
+
+      return () => {
+        unwatchAttack();
+      };
+    }
+  }, [monWarsContract, publicClient, address]);
+
+  // Update NFT minting handler
+  const handleMintNFT = async () => {
+    if (!monWarsContract || !publicClient) return;
+    setShowVideo(true);
+  };
+
+  // Update video end handler
+  const handleVideoEnd = async () => {
+    setShowVideo(false);
+    setShowMintPopup(true);
+  };
+
   return (
     <div className="sticky lg:static top-0 navbar bg-gradient-to-r from-[#2A2A2A] to-[#1A1A1A] min-h-0 flex-shrink-0 justify-between z-20 px-0 sm:px-2 border-b border-[#FECA7E]/20">
       <div className="navbar-start w-auto lg:w-1/2">
@@ -295,6 +411,17 @@ export const Header = () => {
         >
           Meet the Team
         </Link>
+      </div>
+
+      <div className="navbar-center">
+        {isEligibleForNFT && !hasMintedNFT && address && (
+          <button
+            onClick={handleMintNFT}
+            className="btn bg-[#FECA7E] text-black hover:bg-[#FED99E] border-none font-bold px-6 py-2 rounded-md animate-pulse"
+          >
+            Mint Monavara NFT
+          </button>
+        )}
       </div>
 
       <div className="navbar-end flex-grow mr-4 flex items-center gap-4">
@@ -455,35 +582,40 @@ export const Header = () => {
         </div>
       )}
 
+      {/* Leaderboard Modal */}
       {showLeaderboard && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="bg-white rounded-xl p-8 w-3/4 max-w-2xl shadow-lg relative">
+          <div className="bg-gradient-to-b from-[#2A2A2A] to-[#1A1A1A] rounded-xl p-8 max-w-2xl w-full relative shadow-[0_0_30px_rgba(254,202,126,0.3)] border border-[#FECA7E]/20">
             <button
               onClick={() => setShowLeaderboard(false)}
-              className="absolute top-4 right-4 px-3 py-1 bg-red-500 text-white font-bold rounded hover:bg-red-600"
+              className="absolute top-4 right-4 text-xl font-bold text-[#FECA7E] hover:text-[#FED99E]"
             >
-              Close
+              ×
             </button>
-            <h2 className="text-2xl font-bold text-center mb-6">Global Leaderboard</h2>
+            <h2 className="text-4xl mb-8 text-center" style={{ fontFamily: "'The Centurion', serif", color: '#FECA7E', fontSize: '3.5rem', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
+              Leaderboard
+            </h2>
             <div className="overflow-y-auto max-h-[60vh]">
               <table className="w-full">
-                <thead className="sticky top-0 bg-white">
-                  <tr className="border-b border-gray-300">
-                    <th className="py-2 px-4 text-left">Rank</th>
-                    <th className="py-2 px-4 text-left">Player</th>
-                    <th className="py-2 px-4 text-right">Damage Dealt</th>
+                <thead>
+                  <tr className="border-b border-[#FECA7E]/20">
+                    <th className="py-4 px-6 text-left text-[#FECA7E] font-bold">Rank</th>
+                    <th className="py-4 px-6 text-left text-[#FECA7E] font-bold">Player</th>
+                    <th className="py-4 px-6 text-right text-[#FECA7E] font-bold">Damage Dealt</th>
                   </tr>
                 </thead>
                 <tbody>
                   {leaderboard.map((player, index) => (
                     <tr
                       key={player.playerAddress}
-                      className={`${player.playerAddress === address ? "bg-purple-100" : index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      className={`border-b border-[#FECA7E]/10 ${player.playerAddress === address
+                        ? "bg-[#FECA7E]/10"
+                        : "hover:bg-[#FECA7E]/5"
                         }`}
                     >
-                      <td className="py-2 px-4">{index + 1}</td>
-                      <td className="py-2 px-4">{player.username}</td>
-                      <td className="py-2 px-4 text-right">{player.damageDealt.toLocaleString()}</td>
+                      <td className="py-4 px-6 text-[#FECA7E]">{index + 1}</td>
+                      <td className="py-4 px-6 text-white">{player.username}</td>
+                      <td className="py-4 px-6 text-right text-white">{player.damageDealt.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -527,6 +659,111 @@ export const Header = () => {
                 <li>A legendary surprise awaits brave warriors!</li>
                 <li><span className="text-sm italic">(Hint: The King might notice your valor after 10 attacks or 1,000 damage)</span></li>
               </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Eligibility Popup */}
+      {showEligibilityPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+          <div className="bg-gradient-to-b from-[#2A2A2A] to-[#1A1A1A] rounded-xl p-8 max-w-md w-full text-center relative shadow-[0_0_30px_rgba(254,202,126,0.3)] border border-[#FECA7E]/20">
+            <button
+              onClick={() => setShowEligibilityPopup(false)}
+              className="absolute top-4 right-4 text-xl font-bold text-[#FECA7E] hover:text-[#FED99E]"
+            >
+              ×
+            </button>
+            <div className="flex flex-col items-center space-y-4">
+              <h2 className="text-2xl font-bold text-[#FECA7E]">Congratulations, Warrior!</h2>
+              <p className="text-white">Your valor in battle has been noticed!</p>
+              <div className="flex flex-col items-center">
+                <span className="text-[#FECA7E] text-4xl mb-2">↑</span>
+                <p className="text-white">Look up! You can now mint your legendary Monavara NFT!</p>
+              </div>
+              <button
+                onClick={() => setShowEligibilityPopup(false)}
+                className="btn bg-[#FECA7E] text-black hover:bg-[#FED99E] border-none font-bold px-6 py-2 rounded-md"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Video Modal */}
+      {showVideo && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+          <div className="relative">
+            <video
+              ref={videoRef}
+              src="/videos/Monavara_NFT02.mp4"
+              className="max-w-4xl w-full rounded-lg"
+              onEnded={handleVideoEnd}
+              autoPlay
+              playsInline
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Mint Confirmation Popup */}
+      {showMintPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+          <div className="bg-gradient-to-b from-[#2A2A2A] to-[#1A1A1A] rounded-xl p-8 max-w-md w-full text-center relative shadow-[0_0_30px_rgba(254,202,126,0.3)] border border-[#FECA7E]/20">
+            <button
+              onClick={() => setShowMintPopup(false)}
+              className="absolute top-4 right-4 text-xl font-bold text-[#FECA7E] hover:text-[#FED99E]"
+            >
+              ×
+            </button>
+            <h2 className="text-2xl font-bold mb-4 text-[#FECA7E]">King Monavara&apos;s NFT</h2>
+            <div className="flex flex-col items-center">
+              <Image
+                src="/images/Monavara.png"
+                alt="King Monavara"
+                width={128}
+                height={128}
+                className="mb-4"
+              />
+              <p className="text-white text-lg font-bold mb-2">
+                {hasMintedNFT
+                  ? "You already have your legendary NFT!"
+                  : "The time has come to claim your legendary NFT!"}
+              </p>
+              <p className="text-white text-sm mb-4">
+                {hasMintedNFT
+                  ? "Thank you for your bravery in the Monanimal Wars."
+                  : "A token of your bravery in the Monanimal Wars."}
+              </p>
+              {hasMintedNFT ? (
+                <button
+                  onClick={() => setShowMintPopup(false)}
+                  className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold px-6 py-2 rounded-md transition-all duration-200"
+                >
+                  You Already Minted Your NFT
+                </button>
+              ) : (
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setShowMintPopup(false)}
+                    className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold px-6 py-2 rounded-md transition-all duration-200"
+                  >
+                    Maybe Later
+                  </button>
+                  <button
+                    onClick={handleMint}
+                    disabled={isMinting}
+                    className={`btn ${isMinting
+                      ? "bg-[#FED99E] cursor-not-allowed"
+                      : "bg-[#FECA7E] hover:bg-[#FED99E]"
+                      } text-black border-none font-bold px-6 py-2 rounded-md transition-all duration-200`}
+                  >
+                    {isMinting ? "Minting..." : "Claim Your NFT"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

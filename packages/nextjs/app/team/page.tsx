@@ -17,19 +17,19 @@ const Team = () => {
       name: "Karatekid⨀5",
       role: "Developer",
       image: "/images/kid.jpg",
-      description: "Karatekid⨀5 is a blockchain genius who ensures secure and seamless smart contract interactions.",
+      description: "Karatekid⨀5 is aspiring blockchain developer ensuring secure and seamless smart contract interactions.",
     },
     {
       name: "Ravel",
       role: "Developer",
       image: "/images/ravel.jpg",
-      description: "Ravel is a frontend wizard with a passion for creating immersive user experiences.",
+      description: "Ravel is an on-chain data analyst and a proud graduate of the Monad Metrics Guild.",
     },
     {
       name: "MarKrypto",
       role: "Designer",
       image: "/images/mark.jpg",
-      description: "MarKrypto is a UI/UX expert who brings creativity and usability together in stunning designs.",
+      description: "MarKrypto is a UI/UX specialist who combines creativity and user focus to design intuitive and engaging experiences, with a passion for innovation and usability.",
     },
   ];
 

@@ -1,0 +1,21 @@
+{
+    "name": "Monanimal Wars",
+    "short_name": "MonWars",
+    "description": "Join the epic battle of Monanimal Wars! Choose your team, attack or heal, and fight for glory on the blockchain.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#7c3aed",
+    "icons": [
+        {
+            "src": "/images/placa.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/images/placa.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

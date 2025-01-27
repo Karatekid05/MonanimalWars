@@ -2,6 +2,13 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@font-face {
+  font-family: 'The Centurion';
+  src: url('/fonts/TheCenturion.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root,
 [data-theme] {
   background: oklch(var(--b2));

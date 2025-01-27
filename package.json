@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "react-copy-to-clipboard": "5.1.0",
+    "vercel": "latest",
     "wagmi": "^2.14.8"
   }
 }

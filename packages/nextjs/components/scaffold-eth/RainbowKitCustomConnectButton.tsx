@@ -1,3 +1,5 @@
+"use client";
+
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useDisconnect, useAccount } from "wagmi";
 import { useEffect, useState } from "react";
@@ -53,7 +55,7 @@ export const RainbowKitCustomConnectButton = () => {
 
     return (
         <ConnectButton.Custom>
-            {({ account, chain, openConnectModal, mounted }) => {
+            {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
                 const ready = mounted;
                 const connected = ready && account && chain;
 
@@ -71,31 +73,63 @@ export const RainbowKitCustomConnectButton = () => {
                         {(() => {
                             if (!connected) {
                                 return (
-                                    <button className="btn btn-primary btn-sm" onClick={openConnectModal} type="button">
+                                    <button
+                                        onClick={openConnectModal}
+                                        className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold transition-all duration-200"
+                                    >
                                         Connect Wallet
                                     </button>
                                 );
                             }
 
+                            if (chain.unsupported) {
+                                return (
+                                    <button
+                                        onClick={openChainModal}
+                                        className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold transition-all duration-200"
+                                    >
+                                        Wrong network
+                                    </button>
+                                );
+                            }
+
                             return (
-                                <div className="flex justify-end items-center">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex flex-col items-end bg-base-100 rounded-lg p-2">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                                <span className="text-xs font-medium text-gray-500">{chain.name}</span>
+                                <div className="flex items-center">
+                                    <button
+                                        onClick={openChainModal}
+                                        className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold transition-all duration-200 mr-2"
+                                        style={{ display: "flex", alignItems: "center" }}
+                                    >
+                                        {chain.hasIcon && (
+                                            <div
+                                                style={{
+                                                    background: chain.iconBackground,
+                                                    width: 18,
+                                                    height: 18,
+                                                    borderRadius: 999,
+                                                    overflow: "hidden",
+                                                    marginRight: 4,
+                                                }}
+                                            >
+                                                {chain.iconUrl && (
+                                                    <img
+                                                        alt={chain.name ?? "Chain icon"}
+                                                        src={chain.iconUrl}
+                                                        style={{ width: 18, height: 18 }}
+                                                    />
+                                                )}
                                             </div>
-                                            <span className="text-sm font-bold">
-                                                {account.displayBalance}
-                                            </span>
-                                        </div>
-                                        <button
-                                            onClick={() => disconnect()}
-                                            className="btn btn-primary btn-sm"
-                                        >
-                                            {gameUsername || nadName || account.displayName}
-                                        </button>
-                                    </div>
+                                        )}
+                                        {chain.name}
+                                    </button>
+
+                                    <button
+                                        onClick={openAccountModal}
+                                        className="btn border-2 border-[#FECA7E] bg-transparent text-[#FECA7E] hover:bg-[#FECA7E] hover:text-black font-bold transition-all duration-200"
+                                    >
+                                        {gameUsername || nadName || account.displayName}
+                                        {account.displayBalance ? ` (${account.displayBalance})` : ""}
+                                    </button>
                                 </div>
                             );
                         })()}

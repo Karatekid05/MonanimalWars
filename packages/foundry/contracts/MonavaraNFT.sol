@@ -13,7 +13,9 @@ contract MonavaraNFT is ERC721, Ownable(msg.sender) {
     // Mapping to track if a player has already minted
     mapping(address => bool) public hasMinted;
 
-    constructor(string memory _baseTokenURI) ERC721("Legendary Monavara", "MVARA") {
+    constructor(
+        string memory _baseTokenURI
+    ) ERC721("Legendary Monavara", "MVARA") {
         baseTokenURI = _baseTokenURI;
     }
 
@@ -26,7 +28,10 @@ contract MonavaraNFT is ERC721, Ownable(msg.sender) {
     }
 
     function mint(address player) external returns (uint256) {
-        require(msg.sender == monWarsContract, "Only MonWars contract can mint");
+        require(
+            msg.sender == monWarsContract,
+            "Only MonWars contract can mint"
+        );
         require(!hasMinted[player], "Player already has a Monavara NFT");
 
         _tokenIds += 1;
@@ -41,13 +46,13 @@ contract MonavaraNFT is ERC721, Ownable(msg.sender) {
         return baseTokenURI;
     }
 
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
         if (_ownerOf(tokenId) == address(0)) {
-            revert("ERC721Metadata: URI query for nonexistent token");
+            revert("URI query for nonexistent token");
         }
-
-        string memory baseURI = _baseURI();
-        return
-            bytes(baseURI).length > 0 ? string.concat(baseURI, string.concat(Strings.toString(tokenId), ".json")) : "";
+        // Always return the same metadata URL for all tokens
+        return string.concat(baseTokenURI, "1.json");
     }
 }

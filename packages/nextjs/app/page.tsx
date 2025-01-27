@@ -37,21 +37,21 @@ const Home = () => {
     [],
   );
 
+  // Reset states when wallet disconnects
+  useEffect(() => {
+    if (!address) {
+      setPlayerTeam(null);
+      setPlayerDamage(0);
+      setIsEligibleForNFT(false);
+      setShowNFTPopup(false);
+    }
+  }, [address]);
+
   // Fetch player's team, HPs, and leaderboard data
   useEffect(() => {
     const fetchGameState = async () => {
-      if (monWarsContract && address) {
+      if (monWarsContract) {
         try {
-          // Get player's team and data in one call
-          const player = await monWarsContract.read.getPlayer([address]);
-          if (player.teamId > 0) {
-            const teamName = await monWarsContract.read.getTeamName([address]);
-            setPlayerTeam(teamName);
-            setPlayerDamage(Number(player.totalDamageDealt));
-          } else {
-            setPlayerTeam(null); // Reset player team if they don't have one
-          }
-
           // Get all team HPs in parallel
           const hpPromises = monanimals.map(monanimal => monWarsContract.read.getTeamHP([monanimal.name]));
           const hpResults = await Promise.all(hpPromises);
@@ -61,11 +61,24 @@ const Home = () => {
           });
           setTeamHPs(hps);
 
-          // Check NFT eligibility
-          const isEligible = await monWarsContract.read.isPlayerEligibleForNFT([address]);
-          if (isEligible && !isEligibleForNFT) {
-            setIsEligibleForNFT(true);
-            setShowNFTPopup(true);
+          // Only fetch player data if wallet is connected
+          if (address) {
+            // Get player's team and data in one call
+            const player = await monWarsContract.read.getPlayer([address]);
+            if (player.teamId > 0) {
+              const teamName = await monWarsContract.read.getTeamName([address]);
+              setPlayerTeam(teamName);
+              setPlayerDamage(Number(player.totalDamageDealt));
+            } else {
+              setPlayerTeam(null); // Reset player team if they don't have one
+            }
+
+            // Check NFT eligibility
+            const isEligible = await monWarsContract.read.isPlayerEligibleForNFT([address]);
+            if (isEligible && !isEligibleForNFT) {
+              setIsEligibleForNFT(true);
+              setShowNFTPopup(true);
+            }
           }
         } catch (error) {
           console.error("Error fetching game state:", error);
@@ -195,13 +208,19 @@ const Home = () => {
     >
       {/* Main Content */}
       <div className="flex flex-col flex-grow pt-20">
-        <h2 className="text-center text-3xl font-bold mb-8 text-white">Welcome to Monanimal Wars</h2>
-        <p className="text-center text-lg mb-12 text-white">
-          Choose your Monanimal and attack or heal them! Actions are logged on the blockchain.
-        </p>
+        <div className="w-full py-4 mb-4" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 50%, transparent 100%)' }}>
+          <h2 className="text-center text-6xl" style={{ fontFamily: "'The Centurion', serif", fontSize: '4.5rem', textShadow: '2px 2px 4px rgba(0,0,0,0.3)', color: '#FECA7E' }}>
+            Welcome to Monanimal Wars
+          </h2>
+        </div>
+        <div className="w-full py-4" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 50%, transparent 100%)' }}>
+          <p className="text-center text-lg text-white">
+            Choose your Monanimal and attack or heal them! Actions are logged on the blockchain.
+          </p>
+        </div>
 
         {/* Game Status Message */}
-        {playerTeam && (
+        {address && playerTeam && (
           <div className="text-center mb-6">
             <p className="text-lg text-white bg-purple-500/50 py-2">
               You are fighting for team {playerTeam}! Attack other teams or heal yours!
@@ -225,7 +244,7 @@ const Home = () => {
           }}
         >
           {/* Player's Team Section */}
-          {playerTeam && (
+          {address && playerTeam && (
             <div className="flex justify-center mb-16 min-w-fit px-4">
               {monanimals
                 .filter(monanimal => monanimal.name === playerTeam)
@@ -268,9 +287,8 @@ const Home = () => {
                       <div className="h-[25%] flex flex-col justify-start px-6 mt-3">
                         <div className="w-full bg-gray-200 rounded-full h-4">
                           <div
-                            className={`h-4 rounded-full ${
-                              teamHPs[monanimal.name] === 0 ? "bg-gray-500" : "bg-green-500"
-                            }`}
+                            className={`h-4 rounded-full ${teamHPs[monanimal.name] === 0 ? "bg-gray-500" : "bg-green-500"
+                              }`}
                             style={{
                               width: `${((teamHPs[monanimal.name] || 0) / 10000) * 100}%`,
                               transition: "width 0.5s ease-in-out",
@@ -284,12 +302,11 @@ const Home = () => {
                       <div className="h-[25%] flex items-start justify-center mt-2">
                         <button
                           onClick={handleHeal}
-                          disabled={isLoading || teamHPs[monanimal.name] === 10000}
-                          className={`w-32 px-4 py-2 ${
-                            isLoading || teamHPs[monanimal.name] === 10000
-                              ? "bg-gray-400"
-                              : "bg-green-500 hover:bg-green-600"
-                          } text-white font-bold rounded transition-colors`}
+                          disabled={!address || isLoading || teamHPs[monanimal.name] === 10000}
+                          className={`w-32 px-4 py-2 ${!address || isLoading || teamHPs[monanimal.name] === 10000
+                            ? "bg-gray-400"
+                            : "bg-green-500 hover:bg-green-600"
+                            } text-white font-bold rounded transition-colors`}
                         >
                           Heal
                         </button>
@@ -343,9 +360,8 @@ const Home = () => {
                     <div className="h-[25%] flex flex-col justify-start px-6 mt-3">
                       <div className="w-full bg-gray-200 rounded-full h-4">
                         <div
-                          className={`h-4 rounded-full ${
-                            teamHPs[monanimal.name] === 0 ? "bg-gray-500" : "bg-blue-500"
-                          }`}
+                          className={`h-4 rounded-full ${teamHPs[monanimal.name] === 0 ? "bg-gray-500" : "bg-blue-500"
+                            }`}
                           style={{
                             width: `${((teamHPs[monanimal.name] || 0) / 10000) * 100}%`,
                             transition: "width 0.5s ease-in-out",
@@ -359,12 +375,11 @@ const Home = () => {
                     <div className="h-[25%] flex items-start justify-center mt-2">
                       <button
                         onClick={() => handleAttack(monanimal.name)}
-                        disabled={isLoading || !playerTeam || teamHPs[monanimal.name] === 0}
-                        className={`w-32 px-4 py-2 ${
-                          isLoading || !playerTeam || teamHPs[monanimal.name] === 0
-                            ? "bg-gray-400"
-                            : "bg-red-500 hover:bg-red-600"
-                        } text-white font-bold rounded transition-colors`}
+                        disabled={!address || isLoading || !playerTeam || teamHPs[monanimal.name] === 0}
+                        className={`w-32 px-4 py-2 ${!address || isLoading || !playerTeam || teamHPs[monanimal.name] === 0
+                          ? "bg-gray-400"
+                          : "bg-red-500 hover:bg-red-600"
+                          } text-white font-bold rounded transition-colors`}
                       >
                         {teamHPs[monanimal.name] === 0 ? "Defeated" : "Attack"}
                       </button>
@@ -375,34 +390,6 @@ const Home = () => {
           </div>
         </div>
       </div>
-
-      {/* NFT Popup */}
-      {showNFTPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="bg-white rounded-xl p-8 max-w-md w-full text-center relative">
-            <button
-              onClick={() => setShowNFTPopup(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              ×
-            </button>
-            <h2 className="text-2xl font-bold mb-4">King Monavara&apos;s Decision</h2>
-            <p className="mb-6">You&apos;re eligible to mint the legendary Monavara</p>
-            <div className="mb-6">
-              <Image src="/images/Monavara.png" alt="Legendary Monavara" width={200} height={200} className="mx-auto" />
-            </div>
-            <button
-              onClick={handleMint}
-              disabled={isMinting}
-              className={`w-full py-3 px-6 rounded-lg text-white font-bold ${
-                isMinting ? "bg-gray-400" : "bg-purple-600 hover:bg-purple-700"
-              }`}
-            >
-              {isMinting ? "Minting..." : "Mint Monavara NFT"}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
